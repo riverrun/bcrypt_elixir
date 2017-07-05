@@ -31,15 +31,17 @@ defmodule BcryptElixir.Mixfile do
     [
       {:elixir_make, "~> 0.4", runtime: false},
       {:earmark, "~> 1.2", only: :dev},
-      {:ex_doc,  "~> 0.15", only: :dev}
+      {:ex_doc,  "~> 0.16", only: :dev}
     ]
   end
 
   defp package do
-    [files: ["lib", "c_src", "mix.exs", "Makefile*", "README.md"],
-     maintainers: ["David Whitlock"],
-     licenses: ["Apache 2.0"],
-     links: %{"GitHub" => "https://github.com/riverrun/argon2_elixir",
-       "Docs" => "http://hexdocs.pm/argon2_elixir"}]
+    [
+      files: ["lib", "c_src", "mix.exs", "Makefile*", "README.md"],
+      maintainers: ["David Whitlock"],
+      licenses: ["Apache 2.0"],
+      links: %{"GitHub" => "https://github.com/riverrun/bcrypt_elixir",
+        "Docs" => "http://hexdocs.pm/bcrypt_elixir"}
+    ]
   end
 end
