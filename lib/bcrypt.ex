@@ -45,10 +45,11 @@ defmodule Bcrypt do
 
   The check is performed in constant time to avoid timing attacks.
   """
-  def verify_hash(stored_hash, password) when is_binary(stored_hash) do
+  def verify_hash(stored_hash, password, opts \\ [])
+  def verify_hash(stored_hash, password, _) when is_binary(stored_hash) do
     Base.verify_hash(stored_hash, password)
   end
-  def verify_hash(_, _) do
+  def verify_hash(_, _, _) do
     raise ArgumentError, "Wrong type - the password and hash need to be strings"
   end
 
