@@ -87,6 +87,6 @@ defmodule Bcrypt.Base do
   end
 
   defp fmt_hash(hash, salt, prefix, log_rounds) do
-    "$#{prefix}$#{log_rounds}$#{salt}#{Base64.encode(hash)}"
+    "$#{prefix}$#{log_rounds}$#{Base64.normalize(salt)}#{Base64.encode(hash)}"
   end
 end
