@@ -1,5 +1,6 @@
 defmodule Bcrypt.Base do
   @moduledoc """
+  Base module for the Bcrypt password hashing library.
   """
 
   use Bitwise
@@ -27,6 +28,9 @@ defmodule Bcrypt.Base do
       "the salt (before encoding) should be 16 bytes long"
   end
 
+  @doc """
+  Verify a Bcrypt hash.
+  """
   def verify_hash(stored_hash, password) do
     hashpw(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))
     |> Tools.secure_check(stored_hash)

@@ -1,5 +1,34 @@
 defmodule Bcrypt do
   @moduledoc """
+  Bcrypt password hashing library main module.
+
+  For a lower-level API, see Bcrypt.Base.
+
+  ## Bcrypt
+
+  Bcrypt is a key derivation function for passwords designed by Niels Provos
+  and David Mazières. Bcrypt is an adaptive function, which means that it can
+  be configured to remain slow and resistant to brute-force attacks even as
+  computational power increases.
+
+  The computationally intensive code is run in C, using Erlang NIFs. One concern
+  about NIFs is that they block the Erlang VM, and so it is better to make
+  sure these functions do not run for too long. This bcrypt implementation
+  has been adapted so that each NIF runs for as short a time as possible.
+
+  ## Bcrypt versions
+
+  This bcrypt implementation is based on the latest OpenBSD version, which
+  fixed a small issue that affected some passwords longer than 72 characters.
+  By default, it produces hashes with the prefix `$2b$`, and it can check
+  hashes with either the `$2b$` prefix or the older `$2a$` prefix.
+  It is also possible to generate hashes with the `$2a$` prefix by running
+  the following command:
+
+      Bcrypt.hashpass("hard to guess", Bcrypt.gen_salt(12, true))
+
+  This option should only be used if you need to generate hashes that are
+  then checked by older libraries.
   """
 
   alias Bcrypt.{Base, Base64}
@@ -7,7 +36,7 @@ defmodule Bcrypt do
   @log_rounds 12
 
   @doc """
-  Generate a salt for use with the `hashpass` function.
+  Generate a salt for use with the `Bcrypt.Base.hashpass` function.
 
   The log_rounds parameter determines the computational complexity
   of the generation of the password hash. Its default is 12, the minimum is 4,
@@ -32,9 +61,13 @@ defmodule Bcrypt do
   @doc """
   Hash the password with a salt which is randomly generated.
 
-  To change the complexity (and the time taken) of the  password hash
-  calculation, you need to change the value for `bcrypt_log_rounds`
-  in the config file.
+  ## Options
+
+  There is one option:
+
+    * log_rounds - the number of log rounds
+      * the default is 12
+
   """
   def hash_pwd_salt(password, opts \\ []) do
     Base.hash_password(password, Keyword.get(opts, :log_rounds, @log_rounds) |> gen_salt)
@@ -44,6 +77,10 @@ defmodule Bcrypt do
   Check the password.
 
   The check is performed in constant time to avoid timing attacks.
+
+  ## Options
+
+  There are no options.
   """
   def verify_hash(stored_hash, password, opts \\ [])
   def verify_hash(stored_hash, password, _) when is_binary(stored_hash) do
@@ -54,10 +91,11 @@ defmodule Bcrypt do
   end
 
   @doc """
-  Perform a dummy check for a user that does not exist.
+  A dummy verify function to help prevent user enumeration.
 
   This always returns false. The reason for implementing this check is
-  in order to make user enumeration by timing responses more difficult.
+  in order to make it more difficult for an attacker to identify users
+  by timing responses.
   """
   def no_user_verify(opts) do
     hash_pwd_salt("password", opts)

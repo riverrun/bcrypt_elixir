@@ -1,14 +1,30 @@
 defmodule Bcrypt.Stats do
   @moduledoc """
   Module to provide statistics for the Bcrypt password hashing function.
+
+  ## Configuring Bcrypt
+
+  There is one configuration option for Bcrypt - log_rounds.
+  Increasing this value will increase the complexity, and time
+  taken, of the Bcrypt function.
   """
 
   @doc """
   Hash a password with Bcrypt and print out a report.
 
   This function hashes a password, and salt, with Bcrypt.Base.hash_password/2
-  and prints out statistics which can help you choose how many log rounds to use
-  with Bcrypt.
+  and prints out statistics which can help you choose how many to configure
+  Bcrypt.
+
+  ## Options
+
+  There are three options:
+
+    * log_rounds - the number of log rounds
+      * the default is 12
+    * password - the password used
+    * salt - the salt used
+
   """
   def report(opts \\ []) do
     password = Keyword.get(opts, :password, "password")

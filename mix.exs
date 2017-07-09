@@ -1,7 +1,7 @@
 defmodule BcryptElixir.Mixfile do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.8.0"
 
   @description """
   Bcrypt password hashing algorithm for Elixir
@@ -23,7 +23,7 @@ defmodule BcryptElixir.Mixfile do
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :crypto]
     ]
   end
 
