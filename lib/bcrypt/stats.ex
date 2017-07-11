@@ -38,9 +38,9 @@ defmodule Bcrypt.Stats do
   defp format_result(check, encoded, exec_time) do
     log_rounds = String.slice(encoded, 4..5)
     IO.puts """
-    Hash: #{encoded}
-    Log rounds: #{log_rounds}
-    #{format_time(exec_time)} seconds
+    Hash:\t\t#{encoded}
+    Log rounds:\t#{log_rounds}
+    Time taken:\t#{format_time(exec_time)} seconds
     Verification #{if check, do: "ok", else: "failed"}
     """
   end
