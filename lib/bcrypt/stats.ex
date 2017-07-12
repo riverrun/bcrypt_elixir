@@ -31,7 +31,7 @@ defmodule Bcrypt.Stats do
     log_rounds = Keyword.get(opts, :log_rounds, 12)
     salt = Keyword.get(opts, :salt, Bcrypt.gen_salt(log_rounds))
     {exec_time, encoded} = :timer.tc(Bcrypt.Base, :hash_password, [password, salt])
-    Bcrypt.verify_hash(encoded, password)
+    Bcrypt.verify_pass(password, encoded)
     |> format_result(encoded, exec_time)
   end
 
@@ -41,7 +41,7 @@ defmodule Bcrypt.Stats do
     Hash:\t\t#{encoded}
     Log rounds:\t#{log_rounds}
     Time taken:\t#{format_time(exec_time)} seconds
-    Verification #{if check, do: "ok", else: "failed"}
+    Verification #{if check, do: "OK", else: "FAILED"}
     """
   end
 

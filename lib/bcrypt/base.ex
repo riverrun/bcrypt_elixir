@@ -29,9 +29,9 @@ defmodule Bcrypt.Base do
   end
 
   @doc """
-  Verify a Bcrypt hash.
+  Verify a password by comparing it with the stored Bcrypt hash.
   """
-  def verify_hash(stored_hash, password) do
+  def verify_pass(password, stored_hash) do
     hashpw(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))
     |> Tools.secure_check(stored_hash)
   end

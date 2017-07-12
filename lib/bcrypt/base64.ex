@@ -2,6 +2,8 @@ defmodule Bcrypt.Base64 do
   @moduledoc """
   Module that provides base64 encoding for bcrypt.
 
+  Most developers will not need to use this module directly.
+
   Bcrypt uses an adapted base64 alphabet (using `.` instead of `+`,
   starting with `./` and with no padding).
   """

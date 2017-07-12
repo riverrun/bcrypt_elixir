@@ -25,7 +25,7 @@ defmodule Bcrypt do
   It is also possible to generate hashes with the `$2a$` prefix by running
   the following command:
 
-      Bcrypt.hashpass("hard to guess", Bcrypt.gen_salt(12, true))
+      Bcrypt.Base.hash_password("hard to guess", Bcrypt.gen_salt(12, true))
 
   This option should only be used if you need to generate hashes that are
   then checked by older libraries.
@@ -36,7 +36,7 @@ defmodule Bcrypt do
   @log_rounds 12
 
   @doc """
-  Generate a salt for use with the `Bcrypt.Base.hashpass` function.
+  Generate a salt for use with the `Bcrypt.Base.hash_password` function.
 
   The log_rounds parameter determines the computational complexity
   of the generation of the password hash. Its default is 12, the minimum is 4,
@@ -82,12 +82,12 @@ defmodule Bcrypt do
 
   There are no options.
   """
-  def verify_hash(stored_hash, password, opts \\ [])
-  def verify_hash(stored_hash, password, _) when is_binary(stored_hash) do
-    Base.verify_hash(stored_hash, password)
+  def verify_pass(password, stored_hash, opts \\ [])
+  def verify_pass(password, stored_hash, _) when is_binary(password) do
+    Base.verify_pass(password, stored_hash)
   end
-  def verify_hash(_, _, _) do
-    raise ArgumentError, "Wrong type - the password and hash need to be strings"
+  def verify_pass(_, _, _) do
+    raise ArgumentError, "Wrong type - the password should be a string"
   end
 
   @doc """

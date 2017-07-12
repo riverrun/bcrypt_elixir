@@ -3,10 +3,10 @@ defmodule BcryptTest do
 
   def hash_check_password(password, wrong1, wrong2, wrong3) do
     hash = Bcrypt.hash_pwd_salt(password)
-    assert Bcrypt.verify_hash(hash, password) == true
-    assert Bcrypt.verify_hash(hash, wrong1) == false
-    assert Bcrypt.verify_hash(hash, wrong2) == false
-    assert Bcrypt.verify_hash(hash, wrong3) == false
+    assert Bcrypt.verify_pass(password, hash) == true
+    assert Bcrypt.verify_pass(wrong1, hash) == false
+    assert Bcrypt.verify_pass(wrong2, hash) == false
+    assert Bcrypt.verify_pass(wrong3, hash) == false
   end
 
   test "hashing and checking passwords" do
