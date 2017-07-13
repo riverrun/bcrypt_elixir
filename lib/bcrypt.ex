@@ -11,11 +11,6 @@ defmodule Bcrypt do
   be configured to remain slow and resistant to brute-force attacks even as
   computational power increases.
 
-  The computationally intensive code is run in C, using Erlang NIFs. One concern
-  about NIFs is that they block the Erlang VM, and so it is better to make
-  sure these functions do not run for too long. This bcrypt implementation
-  has been adapted so that each NIF runs for as short a time as possible.
-
   ## Bcrypt versions
 
   This bcrypt implementation is based on the latest OpenBSD version, which
@@ -66,11 +61,22 @@ defmodule Bcrypt do
   There is one option:
 
     * log_rounds - the number of log rounds
-      * the default is 12
+      * the amount of computation, given in number of iterations
+      * the default is 12 (2^12 rounds)
 
+  The log_rounds can also be set in the config file.
+
+  If you are hashing passwords in your tests, it can be useful to add
+  the following to the `config/test.exs` file:
+
+      config :bcrypt_elixir,
+        log_rounds: 4
+
+  NB. do not use this value in production.
   """
   def hash_pwd_salt(password, opts \\ []) do
-    Base.hash_password(password, Keyword.get(opts, :log_rounds, @log_rounds) |> gen_salt)
+    Base.hash_password(password, gen_salt(Keyword.get(
+      opts, :log_rounds, Application.get_env(:bcrypt_elixir, :log_rounds, 12))))
   end
 
   @doc """

@@ -29,6 +29,13 @@ defmodule BcryptTest do
     hash_check_password("Я❤três☕ où☔", "Я❤tres☕ où☔", "Я❤três☕où☔", "Я❤três où☔")
   end
 
+  test "hash_pwd_salt number of rounds" do
+    Application.put_env(:bcrypt_elixir, :log_rounds, 4)
+    assert String.starts_with?(Bcrypt.hash_pwd_salt(""), "$2b$04$")
+    Application.delete_env(:bcrypt_elixir, :log_rounds)
+    assert String.starts_with?(Bcrypt.hash_pwd_salt(""), "$2b$12$")
+  end
+
   test "gen_salt number of rounds" do
     assert String.starts_with?(Bcrypt.gen_salt(8), "$2b$08$")
     assert String.starts_with?(Bcrypt.gen_salt(20), "$2b$20$")

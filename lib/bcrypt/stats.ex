@@ -7,6 +7,17 @@ defmodule Bcrypt.Stats do
   There is one configuration option for Bcrypt - log_rounds.
   Increasing this value will increase the complexity, and time
   taken, of the Bcrypt function.
+
+  Increasing the time that a password hash function takes makes it more
+  difficult for an attacker to find the correct password. However, the
+  amount of time a valid user has to wait also needs to be taken into
+  consideration when setting the number of log rounds.
+
+  The correct number of log rounds depends on circumstances specific to your
+  use case, such as what level of security you want, how often the user
+  has to log in, and the hardware you are using. However, for password
+  hashing, we do not recommend setting the number of log rounds to anything
+  less than 12.
   """
 
   @doc """
@@ -23,8 +34,9 @@ defmodule Bcrypt.Stats do
     * log_rounds - the number of log rounds
       * the default is 12
     * password - the password used
+      * the default is "password"
     * salt - the salt used
-
+      * the default is the output of Bcrypt.gen_salt
   """
   def report(opts \\ []) do
     password = Keyword.get(opts, :password, "password")
