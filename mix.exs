@@ -1,7 +1,7 @@
 defmodule BcryptElixir.Mixfile do
   use Mix.Project
 
-  @version "0.10.1"
+  @version "0.11.0"
 
   @description """
   Bcrypt password hashing algorithm for Elixir

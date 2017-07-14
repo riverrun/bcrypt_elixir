@@ -56,15 +56,13 @@ defmodule Bcrypt do
   @doc """
   Hash the password with a salt which is randomly generated.
 
-  ## Options
+  ## Configurable parameters
 
-  There is one option:
+  The following parameter can be set in the config file:
 
-    * log_rounds - the number of log rounds
-      * the amount of computation, given in number of iterations
-      * the default is 12 (2^12 rounds)
-
-  The log_rounds can also be set in the config file.
+    * log_rounds - computational cost
+      * the number of log rounds
+      * 12 (2^12 rounds) is the default
 
   If you are hashing passwords in your tests, it can be useful to add
   the following to the `config/test.exs` file:
@@ -73,6 +71,15 @@ defmodule Bcrypt do
         log_rounds: 4
 
   NB. do not use this value in production.
+
+  ## Options
+
+  There is one option (this can be used if you want to override the
+  value in the config):
+
+    * log_rounds - the number of log rounds
+      * the amount of computation, given in number of iterations
+
   """
   def hash_pwd_salt(password, opts \\ []) do
     Base.hash_password(password, gen_salt(Keyword.get(
@@ -83,16 +90,11 @@ defmodule Bcrypt do
   Check the password.
 
   The check is performed in constant time to avoid timing attacks.
-
-  ## Options
-
-  There are no options.
   """
-  def verify_pass(password, stored_hash, opts \\ [])
-  def verify_pass(password, stored_hash, _) when is_binary(password) do
+  def verify_pass(password, stored_hash) when is_binary(password) do
     Base.verify_pass(password, stored_hash)
   end
-  def verify_pass(_, _, _) do
+  def verify_pass(_, _) do
     raise ArgumentError, "Wrong type - the password should be a string"
   end
 
