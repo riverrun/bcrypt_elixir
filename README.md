@@ -19,7 +19,7 @@ which provides a higher-level api.
 ```elixir
 def deps do
   [
-    {:bcrypt_elixir, "~> 1.0"}
+    {:bcrypt_elixir, "~> 0.12"}
   ]
 end
 ```
