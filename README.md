@@ -16,6 +16,8 @@ which provides a higher-level api.
 
 ## Installation
 
+1. Add bcrypt_elixir to the `deps` section of your mix.exs file:
+
 ```elixir
 def deps do
   [
@@ -24,8 +26,16 @@ def deps do
 end
 ```
 
-You also need to have a C compiler installed to run bcrypt_elixir.
+2. Make sure you have a C compiler installed.
 See the [Comeonin wiki](https://github.com/riverrun/comeonin/wiki) for details.
+
+3. Optional: during tests (and tests only), you may want to reduce the number of rounds
+so it does not slow down your test suite. If you have a config/test.exs, you should
+add:
+
+```elixir
+config :bcrypt_elixir, :log_rounds, 4
+```
 
 ## Use
 
