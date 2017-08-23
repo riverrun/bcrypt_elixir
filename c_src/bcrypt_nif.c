@@ -1,4 +1,4 @@
-/*	$OpenBSD: bcrypt.c,v 1.52 2015/01/28 23:33:52 tedu Exp $	*/
+/*	$OpenBSD: bcrypt.c,v 1.57 2016/08/26 08:25:02 guenther Exp $	*/
 
 /*
  * Copyright (c) 2014 Ted Unangst <tedu@openbsd.org>
@@ -29,80 +29,150 @@
  * 	ctext := Encrypt_ECB (state, ctext);
  * 6. RETURN Concatenate (salt, ctext);
  *
- * This version is designed to not allow any NIF to run for too long,
- * and has been implemented by David Whitlock and Jason M Barnes.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
 #include "erl_nif.h"
-#include "erl_blf.h"
+#include "blf.h"
 
-#define BCRYPT_MAXSALT 16
-#define BCRYPT_WORDS 6
-#define	BCRYPT_HASHLEN 23
+/* This implementation is adaptable to current computing power.
+ * You can have up to 2^31 rounds which should be enough for some
+ * time to come.
+ */
 
+#define BCRYPT_VERSION '2'
+#define BCRYPT_MAXSALT 16	/* Precomputation is just so nice */
+#define BCRYPT_WORDS 6		/* Ciphertext words */
+#define BCRYPT_MINLOGROUNDS 4	/* we have log2(rounds) in salt */
+
+#define	BCRYPT_SALTSPACE	(7 + (BCRYPT_MAXSALT * 4 + 2) / 3 + 1)
+#define	BCRYPT_HASHSPACE	61
+
+static int bcrypt_initsalt(int, uint8_t *, char *, size_t);
+static int encode_base64(char *, const uint8_t *, size_t);
+static int decode_base64(uint8_t *, size_t, const char *);
 static void secure_bzero(void *, size_t);
+static int secure_compare(const uint8_t *, const uint8_t *, size_t);
 
-static ERL_NIF_TERM bf_init(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	ErlNifBinary state;
-	char key[1024];
-	char salt[1024];
-	uint8_t key_len;
-	unsigned long key_len_arg;
-	uint8_t salt_len;
+	ErlNifBinary csalt;
+	unsigned int log_rounds;
+	static char gsalt[BCRYPT_SALTSPACE];
 
-	if (argc != 3 || !enif_get_string(env, argv[0], key, sizeof(key), ERL_NIF_LATIN1) ||
-			!enif_get_ulong(env, argv[1], &key_len_arg) ||
-			!enif_get_string(env, argv[2], salt, sizeof(salt), ERL_NIF_LATIN1))
+	if (argc != 2 || !enif_inspect_binary(env, argv[0], &csalt) ||
+			!enif_get_uint(env, argv[1], &log_rounds))
 		return enif_make_badarg(env);
-	key_len = key_len_arg;
+
+	bcrypt_initsalt(log_rounds, (uint8_t *)csalt.data, gsalt, sizeof(gsalt));
+	return enif_make_string(env, gsalt, ERL_NIF_LATIN1);
+}
+
+/*
+ * Generate a salt.
+ */
+static int bcrypt_initsalt(int log_rounds, uint8_t *csalt, char *salt, size_t saltbuflen)
+{
+	if (saltbuflen < BCRYPT_SALTSPACE) {
+		return -1;
+	}
+
+	if (log_rounds < 4)
+		log_rounds = 4;
+	else if (log_rounds > 31)
+		log_rounds = 31;
+
+	snprintf(salt, saltbuflen, "$2b$%2.2u$", log_rounds);
+	encode_base64(salt + 7, csalt, BCRYPT_MAXSALT);
+
+	return 0;
+}
+
+/*
+ * The core bcrypt function.
+ */
+static int bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
+		size_t encryptedlen)
+{
+	blf_ctx state;
+	uint32_t rounds, i, k;
+	uint16_t j;
+	size_t key_len;
+	uint8_t salt_len, logr, minor;
+	uint8_t ciphertext[4 * BCRYPT_WORDS] = "OrpheanBeholderScryDoubt";
+	uint8_t csalt[BCRYPT_MAXSALT];
+	uint32_t cdata[BCRYPT_WORDS];
+
+	if (encryptedlen < BCRYPT_HASHSPACE)
+		goto inval;
+
+	/* Check and discard "$" identifier */
+	if (salt[0] != '$')
+		goto inval;
+	salt += 1;
+
+	if (salt[0] != BCRYPT_VERSION)
+		goto inval;
+
+	/* Check for minor versions */
+	switch ((minor = salt[1])) {
+		case 'a':
+			key_len = (uint8_t)(strlen(key) + 1);
+			break;
+		case 'b':
+			/* strlen() returns a size_t, but the function calls
+			 * below result in implicit casts to a narrower integer
+			 * type, so cap key_len at the actual maximum supported
+			 * length here to avoid integer wraparound */
+			key_len = strlen(key);
+			if (key_len > 72)
+				key_len = 72;
+			key_len++; /* include the NUL */
+			break;
+		default:
+			goto inval;
+	}
+	if (salt[2] != '$')
+		goto inval;
+	/* Discard version + "$" identifier */
+	salt += 3;
+
+	/* Check and parse num rounds */
+	if (!isdigit((unsigned char)salt[0]) ||
+			!isdigit((unsigned char)salt[1]) || salt[2] != '$')
+		goto inval;
+	logr = (salt[1] - '0') + ((salt[0] - '0') * 10);
+	if (logr < BCRYPT_MINLOGROUNDS || logr > 31)
+		goto inval;
+	/* Computer power doesn't increase linearly, 2^x should be fine */
+	rounds = 1U << logr;
+
+	/* Discard num rounds + "$" identifier */
+	salt += 3;
+
+	if (strlen(salt) * 3 / 4 < BCRYPT_MAXSALT)
+		goto inval;
+
+	/* We dont want the base64 salt but the raw data */
+	if (decode_base64(csalt, BCRYPT_MAXSALT, salt))
+		goto inval;
 	salt_len = BCRYPT_MAXSALT;
 
-	if (!enif_alloc_binary(sizeof(blf_ctx), &state))
-		return enif_make_badarg(env);
-
-	Blowfish_initstate((blf_ctx *) state.data);
-	Blowfish_expandstate((blf_ctx *) state.data, (uint8_t *) salt,
-			salt_len, (uint8_t *) key, key_len);
-
-	return enif_make_binary(env, &state);
-}
-
-static ERL_NIF_TERM bf_expand0(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
-	ErlNifBinary state;
-	char key[1024];
-	unsigned int key_len;
-
-	if (argc != 3 || !enif_inspect_binary(env, argv[0], &state) ||
-			!enif_get_string(env, argv[1], key, sizeof(key), ERL_NIF_LATIN1) ||
-			!enif_get_uint(env, argv[2], &key_len))
-		return enif_make_badarg(env);
-
-	Blowfish_expand0state((blf_ctx *) state.data, (uint8_t *) key, (uint8_t) key_len);
-
-	return enif_make_binary(env, &state);
-}
-
-static ERL_NIF_TERM bf_encrypt(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
-{
-	ErlNifBinary state;
-	uint32_t i, k, m;
-	uint16_t j;
-	uint8_t ciphertext[4 * BCRYPT_WORDS] = "OrpheanBeholderScryDoubt";
-	uint32_t cdata[BCRYPT_WORDS];
-	ERL_NIF_TERM encrypted[4 * BCRYPT_WORDS];
-
-	/* Initialize our data from argv */
-	if (argc != 1 || !enif_inspect_binary(env, argv[0], &state))
-		return enif_make_badarg(env);
+	/* Setting up S-Boxes and Subkeys */
+	Blowfish_initstate(&state);
+	Blowfish_expandstate(&state, csalt, salt_len,
+			(uint8_t *)key, key_len);
+	for (k = 0; k < rounds; k++) {
+		Blowfish_expand0state(&state, (uint8_t *)key, key_len);
+		Blowfish_expand0state(&state, csalt, salt_len);
+	}
 
 	/* This can be precomputed later */
 	j = 0;
@@ -111,7 +181,7 @@ static ERL_NIF_TERM bf_encrypt(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 
 	/* Now do the encryption */
 	for (k = 0; k < 64; k++)
-		blf_enc((blf_ctx *) state.data, cdata, BCRYPT_WORDS / 2);
+		blf_enc(&state, cdata, BCRYPT_WORDS / 2);
 
 	for (i = 0; i < BCRYPT_WORDS; i++) {
 		ciphertext[4 * i + 3] = cdata[i] & 0xff;
@@ -123,29 +193,161 @@ static ERL_NIF_TERM bf_encrypt(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 		ciphertext[4 * i + 0] = cdata[i] & 0xff;
 	}
 
-	for (m = 0; m < BCRYPT_HASHLEN; m++) {
-		encrypted[m] = enif_make_uint(env, ciphertext[m]);
-	}
-	secure_bzero(state.data, state.size);
-	enif_release_binary(&state);
+	snprintf(encrypted, 9, "$2%c$%2.2u$", minor, logr);
+	encode_base64(encrypted + 7, csalt, BCRYPT_MAXSALT);
+	encode_base64(encrypted + 7 + 22, ciphertext, 4 * BCRYPT_WORDS - 1);
+	secure_bzero(&state, sizeof(state));
 	secure_bzero(ciphertext, sizeof(ciphertext));
+	secure_bzero(csalt, sizeof(csalt));
 	secure_bzero(cdata, sizeof(cdata));
-	return enif_make_list_from_array(env, encrypted, BCRYPT_HASHLEN);
+	return 0;
+
+inval:
+	return -1;
+}
+
+static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+	ErlNifBinary pass, salt;
+	static char gencrypted[BCRYPT_HASHSPACE];
+
+	if (argc != 2 || !enif_inspect_binary(env, argv[0], &pass) ||
+			!enif_inspect_binary(env, argv[1], &salt))
+		return enif_make_badarg(env);
+
+	if (bcrypt_hashpass((const char *)pass.data, (const char *)salt.data,
+				gencrypted, sizeof(gencrypted)) != 0)
+		return enif_make_badarg(env);
+
+	return enif_make_string(env, gencrypted, ERL_NIF_LATIN1);
+}
+
+static ERL_NIF_TERM bcrypt_checkpass_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+	ErlNifBinary pass, goodhash;
+	char *stored_hash;
+	char hash[BCRYPT_HASHSPACE];
+
+	if (argc != 2 || !enif_inspect_binary(env, argv[0], &pass) ||
+			!enif_inspect_binary(env, argv[1], &goodhash))
+		return enif_make_badarg(env);
+
+	stored_hash = (char *)goodhash.data;
+
+	if (bcrypt_hashpass((const char *)pass.data, (const char *)stored_hash,
+				hash, sizeof(hash)) != 0)
+		return enif_make_int(env, -1);
+	if (strlen(hash) != strlen(stored_hash) ||
+			secure_compare((const uint8_t *)hash, (const uint8_t *)stored_hash,
+				strlen(stored_hash)) != 0) {
+		return enif_make_int(env, -1);
+	}
+
+	secure_bzero(hash, sizeof(hash));
+	return enif_make_int(env, 0);
 }
 
 /*
- * A typical memset() or bzero() call can be optimized away due to "dead store
- * elimination" by sufficiently intelligent compilers.  This is a problem for
- * the above bf_encrypt() function which tries to zero-out several temporary
- * buffers before returning.  If these calls get optimized away, then these
- * buffers might leave sensitive information behind.  There are currently no
- * standard, portable functions to handle this issue -- thus the
- * implementation below.
- *
- * This function cannot be optimized away by dead store elimination, but it
- * will be slower than a normal memset() or bzero() call.  Given that the
- * bcrypt algorithm is designed to consume a large amount of time, the change
- * will likely be negligible.
+ * internal utilities
+ */
+static const uint8_t Base64Code[] =
+"./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+static const uint8_t index_64[128] = {
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 0, 1, 54, 55,
+	56, 57, 58, 59, 60, 61, 62, 63, 255, 255,
+	255, 255, 255, 255, 255, 2, 3, 4, 5, 6,
+	7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+	17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+	255, 255, 255, 255, 255, 255, 28, 29, 30,
+	31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+	41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+	51, 52, 53, 255, 255, 255, 255, 255
+};
+#define CHAR64(c)  ((c) > 127 ? 255 : index_64[(c)])
+
+/*
+ * read buflen (after decoding) bytes of data from b64data
+ */
+static int decode_base64(uint8_t *buffer, size_t len, const char *b64data)
+{
+	uint8_t *bp = buffer;
+	const uint8_t *p = (uint8_t *)b64data;
+	uint8_t c1, c2, c3, c4;
+
+	while (bp < buffer + len) {
+		c1 = CHAR64(*p);
+		/* Invalid data */
+		if (c1 == 255)
+			return -1;
+
+		c2 = CHAR64(*(p + 1));
+		if (c2 == 255)
+			return -1;
+
+		*bp++ = (c1 << 2) | ((c2 & 0x30) >> 4);
+		if (bp >= buffer + len)
+			break;
+
+		c3 = CHAR64(*(p + 2));
+		if (c3 == 255)
+			return -1;
+
+		*bp++ = ((c2 & 0x0f) << 4) | ((c3 & 0x3c) >> 2);
+		if (bp >= buffer + len)
+			break;
+
+		c4 = CHAR64(*(p + 3));
+		if (c4 == 255)
+			return -1;
+		*bp++ = ((c3 & 0x03) << 6) | c4;
+
+		p += 4;
+	}
+	return 0;
+}
+
+/*
+ * Turn len bytes of data into base64 encoded data.
+ * This works without = padding.
+ */
+static int encode_base64(char *b64buffer, const uint8_t *data, size_t len)
+{
+	uint8_t *bp = (uint8_t *)b64buffer;
+	const uint8_t *p = data;
+	uint8_t c1, c2;
+
+	while (p < data + len) {
+		c1 = *p++;
+		*bp++ = Base64Code[(c1 >> 2)];
+		c1 = (c1 & 0x03) << 4;
+		if (p >= data + len) {
+			*bp++ = Base64Code[c1];
+			break;
+		}
+		c2 = *p++;
+		c1 |= (c2 >> 4) & 0x0f;
+		*bp++ = Base64Code[c1];
+		c1 = (c2 & 0x0f) << 2;
+		if (p >= data + len) {
+			*bp++ = Base64Code[c1];
+			break;
+		}
+		c2 = *p++;
+		c1 |= (c2 >> 6) & 0x03;
+		*bp++ = Base64Code[c1];
+		*bp++ = Base64Code[c2 & 0x3f];
+	}
+	*bp = '\0';
+	return 0;
+}
+
+/*
+ * ADD DESCRIPTION
  */
 static void secure_bzero(void *buf, size_t len)
 {
@@ -159,16 +361,25 @@ static void secure_bzero(void *buf, size_t len)
 	}
 }
 
-static int upgrade(ErlNifEnv* env, void** priv_data, void** old_priv_data, ERL_NIF_TERM load_info)
+/*
+ * ADD DESCRIPTION
+ */
+static int secure_compare(const uint8_t *b1, const uint8_t *b2, size_t len)
 {
-	return 0;
+	size_t i;
+	uint8_t d = 0U;
+
+	for (i = 0U; i < len; i++) {
+		d |= b1[i] ^ b2[i];
+	}
+	return (int)((1 & ((d - 1) >> 8)) - 1);
 }
 
 static ErlNifFunc bcrypt_nif_funcs[] =
 {
-	{"bf_init", 3, bf_init},
-	{"bf_expand0", 3, bf_expand0},
-	{"bf_encrypt", 1, bf_encrypt}
+	{"gensalt_nif", 2, bcrypt_gensalt_nif},
+	{"hash_nif", 2, bcrypt_hash_nif, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"checkpass_nif", 2, bcrypt_checkpass_nif, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };
 
-ERL_NIF_INIT(Elixir.Bcrypt.Base, bcrypt_nif_funcs, NULL, NULL, upgrade, NULL)
+ERL_NIF_INIT(Elixir.Bcrypt.Base, bcrypt_nif_funcs, NULL, NULL, NULL, NULL)
