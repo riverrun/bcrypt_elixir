@@ -55,7 +55,7 @@
 #define	BCRYPT_SALTSPACE	(7 + (BCRYPT_MAXSALT * 4 + 2) / 3 + 1)
 #define	BCRYPT_HASHSPACE	61
 
-static int bcrypt_initsalt(int, uint8_t *, char *, size_t);
+static int bcrypt_initsalt(int, uint8_t *, char *, size_t, uint8_t);
 static int encode_base64(char *, const uint8_t *, size_t);
 static int decode_base64(uint8_t *, size_t, const char *);
 static void secure_bzero(void *, size_t);
@@ -63,22 +63,24 @@ static int secure_compare(const uint8_t *, const uint8_t *, size_t);
 
 static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	ErlNifBinary csalt;
-	unsigned int log_rounds;
+	char csalt[BCRYPT_SALTSPACE];
+	unsigned int log_rounds, minor;
 	static char gsalt[BCRYPT_SALTSPACE];
 
-	if (argc != 2 || !enif_inspect_binary(env, argv[0], &csalt) ||
-			!enif_get_uint(env, argv[1], &log_rounds))
+	if (argc != 3 || !enif_get_string(env, argv[0], csalt, sizeof(csalt), ERL_NIF_LATIN1) ||
+			!enif_get_uint(env, argv[1], &log_rounds) ||
+			!enif_get_uint(env, argv[2], &minor))
 		return enif_make_badarg(env);
 
-	bcrypt_initsalt(log_rounds, (uint8_t *)csalt.data, gsalt, sizeof(gsalt));
+	bcrypt_initsalt(log_rounds, (uint8_t *)csalt, gsalt, sizeof(gsalt), (uint8_t)minor);
 	return enif_make_string(env, gsalt, ERL_NIF_LATIN1);
 }
 
 /*
  * Generate a salt.
  */
-static int bcrypt_initsalt(int log_rounds, uint8_t *csalt, char *salt, size_t saltbuflen)
+static int bcrypt_initsalt(int log_rounds, uint8_t *csalt, char *salt,
+		size_t saltbuflen, uint8_t minor)
 {
 	if (saltbuflen < BCRYPT_SALTSPACE) {
 		return -1;
@@ -89,7 +91,7 @@ static int bcrypt_initsalt(int log_rounds, uint8_t *csalt, char *salt, size_t sa
 	else if (log_rounds > 31)
 		log_rounds = 31;
 
-	snprintf(salt, saltbuflen, "$2b$%2.2u$", log_rounds);
+	snprintf(salt, saltbuflen, "$2%c$%2.2u$", minor, log_rounds);
 	encode_base64(salt + 7, csalt, BCRYPT_MAXSALT);
 
 	return 0;
@@ -137,6 +139,7 @@ static int bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
 			key_len++; /* include the NUL */
 			break;
 		default:
+			printf("This version of Bcrypt does not support the 2%c prefix", minor);
 			goto inval;
 	}
 	if (salt[2] != '$')
@@ -208,14 +211,15 @@ inval:
 
 static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	ErlNifBinary pass, salt;
+	char pass[256];
+	char salt[BCRYPT_SALTSPACE];
 	static char gencrypted[BCRYPT_HASHSPACE];
 
-	if (argc != 2 || !enif_inspect_binary(env, argv[0], &pass) ||
-			!enif_inspect_binary(env, argv[1], &salt))
+	if (argc != 2 || !enif_get_string(env, argv[0], pass, sizeof(pass), ERL_NIF_LATIN1) ||
+			!enif_get_string(env, argv[1], salt, sizeof(salt), ERL_NIF_LATIN1))
 		return enif_make_badarg(env);
 
-	if (bcrypt_hashpass((const char *)pass.data, (const char *)salt.data,
+	if (bcrypt_hashpass((const char *)pass, (const char *)salt,
 				gencrypted, sizeof(gencrypted)) != 0)
 		return enif_make_badarg(env);
 
@@ -224,22 +228,19 @@ static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM
 
 static ERL_NIF_TERM bcrypt_checkpass_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	ErlNifBinary pass, goodhash;
-	char *stored_hash;
+	char pass[256];
+	char goodhash[BCRYPT_HASHSPACE];
 	char hash[BCRYPT_HASHSPACE];
 
-	if (argc != 2 || !enif_inspect_binary(env, argv[0], &pass) ||
-			!enif_inspect_binary(env, argv[1], &goodhash))
+	if (argc != 2 || !enif_get_string(env, argv[0], pass, sizeof(pass), ERL_NIF_LATIN1) ||
+			!enif_get_string(env, argv[1], goodhash, sizeof(goodhash), ERL_NIF_LATIN1))
 		return enif_make_badarg(env);
 
-	stored_hash = (char *)goodhash.data;
-
-	if (bcrypt_hashpass((const char *)pass.data, (const char *)stored_hash,
-				hash, sizeof(hash)) != 0)
+	if (bcrypt_hashpass((const char *)pass, (const char *)goodhash, hash, sizeof(hash)) != 0)
 		return enif_make_int(env, -1);
-	if (strlen(hash) != strlen(stored_hash) ||
-			secure_compare((const uint8_t *)hash, (const uint8_t *)stored_hash,
-				strlen(stored_hash)) != 0) {
+
+	if (strlen(hash) != strlen(goodhash) || secure_compare((const uint8_t *)hash,
+				(const uint8_t *)goodhash, strlen(goodhash)) != 0) {
 		return enif_make_int(env, -1);
 	}
 
@@ -377,7 +378,7 @@ static int secure_compare(const uint8_t *b1, const uint8_t *b2, size_t len)
 
 static ErlNifFunc bcrypt_nif_funcs[] =
 {
-	{"gensalt_nif", 2, bcrypt_gensalt_nif},
+	{"gensalt_nif", 3, bcrypt_gensalt_nif},
 	{"hash_nif", 2, bcrypt_hash_nif, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"checkpass_nif", 2, bcrypt_checkpass_nif, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };

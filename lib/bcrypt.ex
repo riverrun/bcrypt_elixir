@@ -28,8 +28,6 @@ defmodule Bcrypt do
 
   alias Bcrypt.Base
 
-  @log_rounds 12
-
   @doc """
   Generate a salt for use with the `Bcrypt.Base.hash_password` function.
 
@@ -41,9 +39,10 @@ defmodule Bcrypt do
   Only use this option if you need to generate hashes that are then checked
   by older libraries.
   """
-  def gen_salt(log_rounds \\ @log_rounds) do
+  def gen_salt(log_rounds, legacy \\ false) do
     :crypto.strong_rand_bytes(16)
-    |> Base.gensalt_nif(log_rounds)
+    |> :binary.bin_to_list
+    |> Base.gensalt_nif(log_rounds, legacy and 97 || 98)
     |> :binary.list_to_bin
   end
 
@@ -86,7 +85,8 @@ defmodule Bcrypt do
   The check is performed in constant time to avoid timing attacks.
   """
   def verify_pass(password, stored_hash) when is_binary(password) do
-    Base.checkpass_nif(password, stored_hash)
+    Base.checkpass_nif(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))
+    |> handle_verify
   end
   def verify_pass(_, _) do
     raise ArgumentError, "Wrong type - the password should be a string"
@@ -103,4 +103,7 @@ defmodule Bcrypt do
     hash_pwd_salt("password", opts)
     false
   end
+
+  defp handle_verify(0), do: true
+  defp handle_verify(_), do: false
 end

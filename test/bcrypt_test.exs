@@ -42,7 +42,6 @@ defmodule BcryptTest do
   end
 
   test "gen_salt length of salt" do
-    assert byte_size(Bcrypt.gen_salt) == 29
     assert byte_size(Bcrypt.gen_salt(8)) == 29
     assert byte_size(Bcrypt.gen_salt(20)) == 29
   end
@@ -50,9 +49,6 @@ defmodule BcryptTest do
   test "wrong input to gen_salt" do
     assert String.starts_with?(Bcrypt.gen_salt(3), "$2b$04$")
     assert String.starts_with?(Bcrypt.gen_salt(32), "$2b$31$")
-    assert_raise ArgumentError, "Wrong type - log_rounds should be an integer between 4 and 31", fn ->
-      Bcrypt.gen_salt(["wrong type"])
-    end
   end
 
   test "gen_salt with support for $2a$ prefix" do
