@@ -29,6 +29,9 @@
  * 	ctext := Encrypt_ECB (state, ctext);
  * 6. RETURN Concatenate (salt, ctext);
  *
+ *
+ * This version, to be used with Erlang / Elixir, has been implemented
+ * by David Whitlock and Jason M Barnes.
  */
 
 #include <stdio.h>
@@ -49,6 +52,7 @@
 
 #define BCRYPT_VERSION '2'
 #define BCRYPT_MAXSALT 16	/* Precomputation is just so nice */
+#define BCRYPT_MAXPASS 256	/* 256, not 73, to replicate behavior for the old 2a prefix */
 #define BCRYPT_WORDS 6		/* Ciphertext words */
 #define BCRYPT_MINLOGROUNDS 4	/* we have log2(rounds) in salt */
 
@@ -210,7 +214,7 @@ inval:
 
 static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	char pass[256];
+	char pass[BCRYPT_MAXPASS];
 	char salt[BCRYPT_SALTSPACE];
 	static char gencrypted[BCRYPT_HASHSPACE];
 
@@ -227,7 +231,7 @@ static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM
 
 static ERL_NIF_TERM bcrypt_checkpass_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	char pass[256];
+	char pass[BCRYPT_MAXPASS];
 	char goodhash[BCRYPT_HASHSPACE];
 	char hash[BCRYPT_HASHSPACE];
 
@@ -347,7 +351,7 @@ static int encode_base64(char *b64buffer, const uint8_t *data, size_t len)
 }
 
 /*
- * ADD DESCRIPTION
+ * Safe memset that will not be optimized away by the compiler.
  */
 static void secure_bzero(void *buf, size_t len)
 {
@@ -362,7 +366,7 @@ static void secure_bzero(void *buf, size_t len)
 }
 
 /*
- * ADD DESCRIPTION
+ * Compare the two inputs in constant time in order to prevent timing attacks.
  */
 static int secure_compare(const uint8_t *b1, const uint8_t *b2, size_t len)
 {
