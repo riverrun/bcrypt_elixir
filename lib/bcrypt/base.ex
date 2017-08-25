@@ -17,12 +17,8 @@ defmodule Bcrypt.Base do
   Hash a password using Bcrypt.
   """
   def hash_password(password, salt) when is_binary(password) and is_binary(salt) do
-    if byte_size(salt) == 29 do
-      hash_nif(:binary.bin_to_list(password), :binary.bin_to_list(salt))
-      |> :binary.list_to_bin
-    else
+    byte_size(salt) == 29 and hash(password, salt, :binary.part(salt, 1, 2)) ||
       raise ArgumentError, "The salt is the wrong length"
-    end
   end
   def hash_password(_, _) do
     raise ArgumentError, "The password and salt should be strings"
@@ -45,4 +41,16 @@ defmodule Bcrypt.Base do
   """
   def checkpass_nif(password, stored_hash)
   def checkpass_nif(_, _), do: :erlang.nif_error(:not_loaded)
+
+  defp hash(password, salt, prefix) when prefix in ["2a", "2b"] do
+    hash_nif(:binary.bin_to_list(password), :binary.bin_to_list(salt))
+    |> :binary.list_to_bin
+  end
+  defp hash(_, _, prefix) do
+    raise ArgumentError, """
+    Bcrypt does not support the #{prefix} prefix.
+    For more information, visit the Comeonin wiki,
+    at https://github.com/riverrun/comeonin/wiki.
+    """
+  end
 end

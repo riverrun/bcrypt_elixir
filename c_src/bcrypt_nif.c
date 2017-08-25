@@ -139,7 +139,6 @@ static int bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
 			key_len++; /* include the NUL */
 			break;
 		default:
-			printf("This version of Bcrypt does not support the 2%c prefix", minor);
 			goto inval;
 	}
 	if (salt[2] != '$')

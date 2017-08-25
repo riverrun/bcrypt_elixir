@@ -119,10 +119,10 @@ defmodule Bcrypt.BaseTest do
   end
 
   test "raise error if salt has unsupported prefix" do
-    assert_raise ArgumentError, "Bcrypt does not support the 2x prefix", fn ->
+    assert_raise ArgumentError, ~r/does not support the 2x prefix/, fn ->
       Base.hash_password("U*U", "$2x$05$CCCCCCCCCCCCCCCCCCCCC.")
     end
-    assert_raise ArgumentError, "Bcrypt does not support the 2y prefix", fn ->
+    assert_raise ArgumentError, ~r/does not support the 2y prefix/, fn ->
       Base.hash_password("U*U", "$2y$05$CCCCCCCCCCCCCCCCCCCCC.")
     end
   end
