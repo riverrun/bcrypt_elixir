@@ -18,6 +18,18 @@ which provides a higher-level api.
 
 1. Add bcrypt_elixir to the `deps` section of your mix.exs file:
 
+If you are using Erlang 20:
+
+```elixir
+def deps do
+  [
+    {:bcrypt_elixir, "~> 1.0"}
+  ]
+end
+```
+
+If you are NOT using Erlang 20:
+
 ```elixir
 def deps do
   [

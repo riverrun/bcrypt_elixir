@@ -26,9 +26,7 @@ defmodule Bcrypt do
   then checked by older libraries.
   """
 
-  alias Bcrypt.{Base, Base64}
-
-  @log_rounds 12
+  alias Bcrypt.Base
 
   @doc """
   Generate a salt for use with the `Bcrypt.Base.hash_password` function.
@@ -41,17 +39,12 @@ defmodule Bcrypt do
   Only use this option if you need to generate hashes that are then checked
   by older libraries.
   """
-  def gen_salt(log_rounds \\ @log_rounds, legacy \\ false)
-  def gen_salt(log_rounds, _) when not is_integer(log_rounds) do
-    raise ArgumentError, "Wrong type - log_rounds should be an integer between 4 and 31"
-  end
-  def gen_salt(log_rounds, legacy) when log_rounds in 4..31 do
+  def gen_salt(log_rounds, legacy \\ false) do
     :crypto.strong_rand_bytes(16)
     |> :binary.bin_to_list
-    |> fmt_salt(zero_str(log_rounds), legacy)
+    |> Base.gensalt_nif(log_rounds, legacy and 97 || 98)
+    |> :binary.list_to_bin
   end
-  def gen_salt(log_rounds, legacy) when log_rounds < 4, do: gen_salt(4, legacy)
-  def gen_salt(log_rounds, legacy) when log_rounds > 31, do: gen_salt(31, legacy)
 
   @doc """
   Hash the password with a salt which is randomly generated.
@@ -92,7 +85,8 @@ defmodule Bcrypt do
   The check is performed in constant time to avoid timing attacks.
   """
   def verify_pass(password, stored_hash) when is_binary(password) do
-    Base.verify_pass(password, stored_hash)
+    Base.checkpass_nif(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))
+    |> handle_verify
   end
   def verify_pass(_, _) do
     raise ArgumentError, "Wrong type - the password should be a string"
@@ -110,10 +104,6 @@ defmodule Bcrypt do
     false
   end
 
-  defp zero_str(log_rounds) do
-    if log_rounds < 10, do: "0#{log_rounds}", else: "#{log_rounds}"
-  end
-
-  defp fmt_salt(salt, log_rounds, false), do: "$2b$#{log_rounds}$#{Base64.encode(salt)}"
-  defp fmt_salt(salt, log_rounds, true), do: "$2a$#{log_rounds}$#{Base64.encode(salt)}"
+  defp handle_verify(0), do: true
+  defp handle_verify(_), do: false
 end
