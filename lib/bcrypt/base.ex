@@ -9,8 +9,13 @@ defmodule Bcrypt.Base do
   @on_load {:init, 0}
 
   def init do
-    path = :filename.join(:code.priv_dir(:bcrypt_elixir), 'bcrypt_nif')
-    :erlang.load_nif(path, 0)
+    case load_nif() do
+      :ok -> :ok
+      _ -> raise """
+        You need to have Erlang 20 installed to use this version of bcrypt_elixir.
+        Either upgrade to Erlang 20 or use version 0.12 of bcrypt_elixir.
+        """
+    end
   end
 
   @doc """
@@ -42,15 +47,20 @@ defmodule Bcrypt.Base do
   def checkpass_nif(password, stored_hash)
   def checkpass_nif(_, _), do: :erlang.nif_error(:not_loaded)
 
+  defp load_nif do
+    path = :filename.join(:code.priv_dir(:bcrypt_elixir), 'bcrypt_nif')
+    :erlang.load_nif(path, 0)
+  end
+
   defp hash(password, salt, prefix) when prefix in ["2a", "2b"] do
     hash_nif(:binary.bin_to_list(password), :binary.bin_to_list(salt))
     |> :binary.list_to_bin
   end
   defp hash(_, _, prefix) do
     raise ArgumentError, """
-    Bcrypt does not support the #{prefix} prefix.
-    For more information, visit the Comeonin wiki,
-    at https://github.com/riverrun/comeonin/wiki.
+    This version of Bcrypt does not support the #{prefix} prefix.
+    For more information, see the Bcrypt versions section in the Comeonin wiki,
+    at https://github.com/riverrun/comeonin/wiki/Choosing-the-password-hashing-algorithm.
     """
   end
 end
