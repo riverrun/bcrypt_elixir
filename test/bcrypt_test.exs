@@ -37,6 +37,7 @@ defmodule BcryptTest do
   end
 
   test "gen_salt number of rounds" do
+    assert String.starts_with?(Bcrypt.gen_salt(), "$2b$12$")
     assert String.starts_with?(Bcrypt.gen_salt(8), "$2b$08$")
     assert String.starts_with?(Bcrypt.gen_salt(20), "$2b$20$")
   end

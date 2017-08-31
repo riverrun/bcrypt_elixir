@@ -21,12 +21,11 @@ defmodule Bcrypt.Base do
   @doc """
   Hash a password using Bcrypt.
   """
-  def hash_password(password, salt) when is_binary(password) and is_binary(salt) do
-    byte_size(salt) == 29 and hash(password, salt, :binary.part(salt, 1, 2)) ||
-      raise ArgumentError, "The salt is the wrong length"
+  def hash_password(password, salt) when byte_size(salt) == 29 do
+    hash(password, salt, :binary.part(salt, 1, 2))
   end
   def hash_password(_, _) do
-    raise ArgumentError, "The password and salt should be strings"
+    raise ArgumentError, "The salt is the wrong length"
   end
 
   @doc """

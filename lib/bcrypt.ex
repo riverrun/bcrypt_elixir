@@ -39,7 +39,7 @@ defmodule Bcrypt do
   Only use this option if you need to generate hashes that are then checked
   by older libraries.
   """
-  def gen_salt(log_rounds, legacy \\ false) do
+  def gen_salt(log_rounds \\ 12, legacy \\ false) do
     :crypto.strong_rand_bytes(16)
     |> :binary.bin_to_list
     |> Base.gensalt_nif(log_rounds, legacy and 97 || 98)
@@ -84,12 +84,9 @@ defmodule Bcrypt do
 
   The check is performed in constant time to avoid timing attacks.
   """
-  def verify_pass(password, stored_hash) when is_binary(password) do
+  def verify_pass(password, stored_hash) do
     Base.checkpass_nif(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))
     |> handle_verify
-  end
-  def verify_pass(_, _) do
-    raise ArgumentError, "Wrong type - the password should be a string"
   end
 
   @doc """
