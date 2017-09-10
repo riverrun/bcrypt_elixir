@@ -40,8 +40,7 @@ defmodule BcryptElixir.Mixfile do
       files: ["lib", "c_src", "mix.exs", "Makefile*", "README.md"],
       maintainers: ["David Whitlock"],
       licenses: ["BSD"],
-      links: %{"GitHub" => "https://github.com/riverrun/bcrypt_elixir",
-        "Docs" => "http://hexdocs.pm/bcrypt_elixir"}
+      links: %{"GitHub" => "https://github.com/riverrun/bcrypt_elixir"}
     ]
   end
 end
