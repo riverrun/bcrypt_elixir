@@ -12,8 +12,11 @@ defmodule Bcrypt.Base do
     case load_nif() do
       :ok -> :ok
       _ -> raise """
-        You need to have Erlang 20 installed to use this version of bcrypt_elixir.
-        Either upgrade to Erlang 20 or use version 0.12 of bcrypt_elixir.
+        An error occurred when loading Bcrypt.
+        Make sure you have a C compiler and Erlang 20 installed.
+        If you are not using Erlang 20, either upgrade to Erlang 20 or
+        use version 0.12 of bcrypt_elixir.
+        See the Comeonin wiki for more information.
         """
     end
   end
