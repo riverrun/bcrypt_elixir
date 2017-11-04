@@ -61,6 +61,10 @@ See the documentation for the Bcrypt module for more information.
 
 For a lower-level api, see the documentation for Bcrypt.Base.
 
+## Deployment
+
+See the Comeonin [deployment guide](https://github.com/riverrun/comeonin/wiki/Deployment).
+
 ### License
 
 BSD. For full details, please read the LICENSE file.
