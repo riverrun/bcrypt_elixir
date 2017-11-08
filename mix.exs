@@ -30,8 +30,7 @@ defmodule BcryptElixir.Mixfile do
   defp deps do
     [
       {:elixir_make, "~> 0.4", runtime: false},
-      {:earmark, "~> 1.2", only: :dev},
-      {:ex_doc,  "~> 0.16", only: :dev}
+      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
     ]
   end
 

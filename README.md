@@ -61,6 +61,9 @@ See the documentation for the Bcrypt module for more information.
 
 For a lower-level api, see the documentation for Bcrypt.Base.
 
+For further information about password hashing and using Bcrypt with Comeonin,
+see the Comeonin [wiki](https://github.com/riverrun/comeonin/wiki).
+
 ## Deployment
 
 See the Comeonin [deployment guide](https://github.com/riverrun/comeonin/wiki/Deployment).

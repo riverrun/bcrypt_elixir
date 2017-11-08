@@ -2,6 +2,10 @@ defmodule Bcrypt do
   @moduledoc """
   Bcrypt password hashing library main module.
 
+  This library can be used on its own, or it can be used together with
+  [Comeonin](https://hexdocs.pm/comeonin/api-reference.html), which
+  provides a higher-level api.
+
   For a lower-level API, see Bcrypt.Base.
 
   ## Bcrypt
@@ -24,6 +28,9 @@ defmodule Bcrypt do
 
   This option should only be used if you need to generate hashes that are
   then checked by older libraries.
+
+  The `$2y$` prefix is not supported. For advice on how to use hashes with the
+  `$2y$` prefix, see [this issue](https://github.com/riverrun/comeonin/issues/103).
   """
 
   alias Bcrypt.Base
