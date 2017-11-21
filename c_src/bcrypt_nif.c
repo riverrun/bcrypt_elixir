@@ -59,7 +59,7 @@
 #define	BCRYPT_SALTSPACE	(7 + (BCRYPT_MAXSALT * 4 + 2) / 3 + 1)
 #define	BCRYPT_HASHSPACE	61
 
-static int bcrypt_initsalt(int, uint8_t *, char *, size_t, uint8_t);
+static int bcrypt_initsalt(int, uint8_t *, char *, uint8_t);
 static int encode_base64(char *, const uint8_t *, size_t);
 static int decode_base64(uint8_t *, size_t, const char *);
 static void secure_bzero(void *, size_t);
@@ -76,26 +76,21 @@ static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv* env, int argc, const ERL_NIF_T
 			!enif_get_uint(env, argv[2], &minor))
 		return enif_make_badarg(env);
 
-	bcrypt_initsalt(log_rounds, (uint8_t *)csalt, gsalt, sizeof(gsalt), (uint8_t)minor);
+	bcrypt_initsalt(log_rounds, (uint8_t *)csalt, gsalt, (uint8_t)minor);
 	return enif_make_string(env, gsalt, ERL_NIF_LATIN1);
 }
 
 /*
  * Generate a salt.
  */
-static int bcrypt_initsalt(int log_rounds, uint8_t *csalt, char *salt,
-		size_t saltbuflen, uint8_t minor)
+static int bcrypt_initsalt(int log_rounds, uint8_t *csalt, char *salt, uint8_t minor)
 {
-	if (saltbuflen < BCRYPT_SALTSPACE) {
-		return -1;
-	}
-
 	if (log_rounds < 4)
 		log_rounds = 4;
 	else if (log_rounds > 31)
 		log_rounds = 31;
 
-	snprintf(salt, saltbuflen, "$2%c$%2.2u$", minor, log_rounds);
+	snprintf(salt, (size_t)BCRYPT_SALTSPACE, "$2%c$%2.2u$", minor, log_rounds);
 	encode_base64(salt + 7, csalt, BCRYPT_MAXSALT);
 
 	return 0;
