@@ -14,6 +14,12 @@ This library can be used on its own, or it can be used together
 with [Comeonin](https://hexdocs.pm/comeonin/api-reference.html),
 which provides a higher-level api.
 
+## Async tests issue
+
+Some developers have reported problems when running tests using `async: true`
+with version 1.0 of bcrypt_elixir. See this [issue](https://github.com/riverrun/bcrypt_elixir/issues/10)
+for more details.
+
 ## Installation
 
 1. Add bcrypt_elixir to the `deps` section of your mix.exs file:
