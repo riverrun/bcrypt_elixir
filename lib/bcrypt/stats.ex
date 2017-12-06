@@ -31,11 +31,11 @@ defmodule Bcrypt.Stats do
 
   There are three options:
 
-    * log_rounds - the number of log rounds
+    * `:log_rounds` - the number of log rounds
       * the default is 12
-    * password - the password used
+    * `:password` - the password used
       * the default is "password"
-    * salt - the salt used
+    * `:salt` - the salt used
       * the default is the output of Bcrypt.gen_salt
   """
   def report(opts \\ []) do

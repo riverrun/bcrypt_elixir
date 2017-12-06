@@ -77,7 +77,7 @@ defmodule Bcrypt do
   There is one option (this can be used if you want to override the
   value in the config):
 
-    * log_rounds - the number of log rounds
+    * `:log_rounds` - the number of log rounds
       * the amount of computation, given in number of iterations
 
   """
