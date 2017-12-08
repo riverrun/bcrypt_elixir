@@ -10,8 +10,11 @@ defmodule Bcrypt.Base do
 
   def init do
     case load_nif() do
-      :ok -> :ok
-      _ -> raise """
+      :ok ->
+        :ok
+
+      _ ->
+        raise """
         An error occurred when loading Bcrypt.
         Make sure you have a C compiler and Erlang 20 installed.
         If you are not using Erlang 20, either upgrade to Erlang 20 or
@@ -27,6 +30,7 @@ defmodule Bcrypt.Base do
   def hash_password(password, salt) when byte_size(salt) == 29 do
     hash(password, salt, :binary.part(salt, 1, 2))
   end
+
   def hash_password(_, _) do
     raise ArgumentError, "The salt is the wrong length"
   end
@@ -56,8 +60,9 @@ defmodule Bcrypt.Base do
 
   defp hash(password, salt, prefix) when prefix in ["2a", "2b"] do
     hash_nif(:binary.bin_to_list(password), :binary.bin_to_list(salt))
-    |> :binary.list_to_bin
+    |> :binary.list_to_bin()
   end
+
   defp hash(_, _, prefix) do
     raise ArgumentError, """
     This version of Bcrypt does not support the #{prefix} prefix.

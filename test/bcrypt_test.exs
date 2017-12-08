@@ -20,8 +20,13 @@ defmodule BcryptTest do
   end
 
   test "hashing and checking passwords with non-ascii characters" do
-    hash_check_password("Сколько лет, сколько зим", "Сколько лет,сколько зим",
-                        "Сколько лет сколько зим", "Сколько лет, сколько")
+    hash_check_password(
+      "Сколько лет, сколько зим",
+      "Сколько лет,сколько зим",
+      "Сколько лет сколько зим",
+      "Сколько лет, сколько"
+    )
+
     hash_check_password("สวัสดีครับ", "สวัดีครับ", "สวัสสดีครับ", "วัสดีครับ")
   end
 
@@ -56,5 +61,4 @@ defmodule BcryptTest do
     assert String.starts_with?(Bcrypt.gen_salt(8, true), "$2a$08$")
     assert String.starts_with?(Bcrypt.gen_salt(12, true), "$2a$12$")
   end
-
 end

@@ -17,5 +17,4 @@ defmodule Bcrypt.StatsTest do
     assert report =~ "Log rounds:\t10\n"
     assert report =~ "Verification OK"
   end
-
 end
