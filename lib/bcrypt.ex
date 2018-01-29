@@ -58,11 +58,10 @@ defmodule Bcrypt do
 
   ## Configurable parameters
 
-  The following parameter can be set in the config file:
+  The following parameters can be set in the config file:
 
-    * log_rounds - computational cost
-      * the number of log rounds
-      * 12 (2^12 rounds) is the default
+    * `log_rounds` - the computational cost as number of log rounds, by default
+      it is 12 (2^12).
 
   If you are hashing passwords in your tests, it can be useful to add
   the following to the `config/test.exs` file:
@@ -77,15 +76,18 @@ defmodule Bcrypt do
   There is one option (this can be used if you want to override the
   value in the config):
 
-    * `:log_rounds` - the number of log rounds
-      * the amount of computation, given in number of iterations
+    * `:log_rounds` - override the application's configured computational cost.
+    * `:legacy` - whether to generate a salt with the old `$2a$` prefix. This
+      should only be used to generate hashes that will be checked by older
+      libraries.
 
   """
   def hash_pwd_salt(password, opts \\ []) do
     Base.hash_password(
       password,
       gen_salt(
-        Keyword.get(opts, :log_rounds, Application.get_env(:bcrypt_elixir, :log_rounds, 12))
+        Keyword.get(opts, :log_rounds, Application.get_env(:bcrypt_elixir, :log_rounds, 12)),
+        Keyword.get(opts, :legacy, false)
       )
     )
   end

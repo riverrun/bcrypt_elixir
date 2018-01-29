@@ -35,10 +35,17 @@ defmodule BcryptTest do
   end
 
   test "hash_pwd_salt number of rounds" do
+    assert String.starts_with?(Bcrypt.hash_pwd_salt("", log_rounds: 4), "$2b$04$")
     Application.put_env(:bcrypt_elixir, :log_rounds, 4)
     assert String.starts_with?(Bcrypt.hash_pwd_salt(""), "$2b$04$")
     Application.delete_env(:bcrypt_elixir, :log_rounds)
     assert String.starts_with?(Bcrypt.hash_pwd_salt(""), "$2b$12$")
+  end
+
+  test "hash_pwd_salt legacy prefix" do
+    assert String.starts_with?(Bcrypt.hash_pwd_salt(""), "$2b$")
+    assert String.starts_with?(Bcrypt.hash_pwd_salt("", legacy: true), "$2a$")
+    assert String.starts_with?(Bcrypt.hash_pwd_salt("", legacy: false), "$2b$")
   end
 
   test "gen_salt number of rounds" do
