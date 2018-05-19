@@ -31,8 +31,8 @@ defmodule Bcrypt.Base do
     hash(password, salt, :binary.part(salt, 1, 2))
   end
 
-  def hash_password(_, _) do
-    raise ArgumentError, "The salt is the wrong length"
+  def hash_password(_, salt) do
+    raise ArgumentError, "The salt #{salt} must be 29 bytes long"
   end
 
   @doc """
