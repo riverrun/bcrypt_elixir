@@ -1,3 +1,6 @@
+/* The underlying bcrypt (hashing) code is derived from OpenBSD and is
+*  subject to the following license: */
+
 /*	$OpenBSD: bcrypt.c,v 1.57 2016/08/26 08:25:02 guenther Exp $	*/
 
 /*
@@ -16,6 +19,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
 /* This password hashing algorithm was designed by David Mazieres
  * <dm@lcs.mit.edu> and works as follows:
  *
@@ -29,9 +33,18 @@
  * 	ctext := Encrypt_ECB (state, ctext);
  * 6. RETURN Concatenate (salt, ctext);
  *
+ */
+
+/* Notes about this implementation */
+
+/*
+ * The NIF functions, which are needed to connect with Erlang / Elixir,
+ * have been implemented by David Whitlock.
  *
- * This version, to be used with Erlang / Elixir, has been implemented
- * by David Whitlock and Jason M Barnes.
+ * The secure_bzero function was implemented by Jason M Barnes.
+ *
+ * The secure_compare function is taken from the reference C implementation
+ * of Argon2.
  */
 
 #include <stdio.h>
