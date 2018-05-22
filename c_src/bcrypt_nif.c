@@ -38,13 +38,15 @@
 /* Notes about this implementation */
 
 /*
- * The NIF functions, which are needed to connect with Erlang / Elixir,
+ * The NIF functions, which are needed to communicate with Erlang / Elixir,
  * have been implemented by David Whitlock.
  *
- * The secure_bzero function was implemented by Jason M Barnes.
+ * The `secure_bzero` function was implemented by Jason M Barnes.
  *
- * The secure_compare function is taken from the reference C implementation
- * of Argon2.
+ * The `secure_compare` function is taken from the reference C implementation
+ * of Argon2, which is copyright (c) 2015 Daniel Dinu, Dmitry Khovratovich (main authors),
+ * Jean-Philippe Aumasson and Samuel Neves, and dual licensed under the CC0 License
+ * and the Apache 2.0 License.
  */
 
 #include <stdio.h>
@@ -288,7 +290,7 @@ static const uint8_t index_64[128] = {
 static int decode_base64(uint8_t *buffer, size_t len, const char *b64data)
 {
 	uint8_t *bp = buffer;
-	const uint8_t *p = (uint8_t *)b64data;
+	const uint8_t *p = b64data;
 	uint8_t c1, c2, c3, c4;
 
 	while (bp < buffer + len) {
@@ -329,7 +331,7 @@ static int decode_base64(uint8_t *buffer, size_t len, const char *b64data)
  */
 static int encode_base64(char *b64buffer, const uint8_t *data, size_t len)
 {
-	uint8_t *bp = (uint8_t *)b64buffer;
+	uint8_t *bp = b64buffer;
 	const uint8_t *p = data;
 	uint8_t c1, c2;
 
