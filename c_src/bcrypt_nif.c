@@ -82,7 +82,7 @@ static int secure_compare(const uint8_t *, const uint8_t *, size_t);
 
 static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	char csalt[BCRYPT_SALTSPACE];
+	char csalt[BCRYPT_MAXSALT];
 	unsigned int log_rounds, minor;
 	static char gsalt[BCRYPT_SALTSPACE];
 
@@ -105,8 +105,8 @@ static int bcrypt_initsalt(int log_rounds, uint8_t *csalt, char *salt, uint8_t m
 	else if (log_rounds > 31)
 		log_rounds = 31;
 
-	snprintf(salt, (size_t)BCRYPT_SALTSPACE, "$2%c$%2.2u$", minor, log_rounds);
-	encode_base64(salt + 7, csalt, (size_t)BCRYPT_MAXSALT);
+	snprintf(salt, BCRYPT_SALTSPACE, "$2%c$%2.2u$", minor, log_rounds);
+	encode_base64(salt + 7, csalt, BCRYPT_MAXSALT);
 
 	return 0;
 }
@@ -290,7 +290,7 @@ static const uint8_t index_64[128] = {
 static int decode_base64(uint8_t *buffer, size_t len, const char *b64data)
 {
 	uint8_t *bp = buffer;
-	const uint8_t *p = b64data;
+	const uint8_t *p = (uint8_t *)b64data;
 	uint8_t c1, c2, c3, c4;
 
 	while (bp < buffer + len) {
@@ -331,7 +331,7 @@ static int decode_base64(uint8_t *buffer, size_t len, const char *b64data)
  */
 static int encode_base64(char *b64buffer, const uint8_t *data, size_t len)
 {
-	uint8_t *bp = b64buffer;
+	uint8_t *bp = (uint8_t *)b64buffer;
 	const uint8_t *p = data;
 	uint8_t c1, c2;
 
