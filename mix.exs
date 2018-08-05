@@ -1,7 +1,7 @@
 defmodule BcryptElixir.Mixfile do
   use Mix.Project
 
-  @version "1.0.8"
+  @version "1.0.9"
 
   @description """
   Bcrypt password hashing algorithm for Elixir
@@ -30,13 +30,13 @@ defmodule BcryptElixir.Mixfile do
   defp deps do
     [
       {:elixir_make, "~> 0.4", runtime: false},
-      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
 
   defp package do
     [
-      files: ["lib", "c_src", "mix.exs", "Makefile*", "README.md"],
+      files: ["lib", "c_src", "mix.exs", "Makefile*", "README.md", "LICENSE"],
       maintainers: ["David Whitlock"],
       licenses: ["BSD"],
       links: %{"GitHub" => "https://github.com/riverrun/bcrypt_elixir"}
