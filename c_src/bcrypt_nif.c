@@ -84,7 +84,7 @@ static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv* env, int argc, const ERL_NIF_T
 {
 	char csalt[BCRYPT_MAXSALT];
 	unsigned int log_rounds, minor;
-	static char gsalt[BCRYPT_SALTSPACE];
+	char gsalt[BCRYPT_SALTSPACE];
 
 	if (argc != 3 || !enif_get_string(env, argv[0], csalt, sizeof(csalt), ERL_NIF_LATIN1) ||
 			!enif_get_uint(env, argv[1], &log_rounds) ||
@@ -226,7 +226,7 @@ static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM
 {
 	char pass[BCRYPT_MAXPASS];
 	char salt[BCRYPT_SALTSPACE];
-	static char gencrypted[BCRYPT_HASHSPACE];
+	char gencrypted[BCRYPT_HASHSPACE];
 
 	if (argc != 2 || !enif_get_string(env, argv[0], pass, sizeof(pass), ERL_NIF_LATIN1) ||
 			!enif_get_string(env, argv[1], salt, sizeof(salt), ERL_NIF_LATIN1))
