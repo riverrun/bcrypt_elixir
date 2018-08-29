@@ -71,8 +71,8 @@
 #define BCRYPT_WORDS 6		/* Ciphertext words */
 #define BCRYPT_MINLOGROUNDS 4	/* we have log2(rounds) in salt */
 
-#define	BCRYPT_SALTSPACE	(7 + (BCRYPT_MAXSALT * 4 + 2) / 3 + 1)
-#define	BCRYPT_HASHSPACE	61
+#define	BCRYPT_SALTSPACE	(7 + (BCRYPT_MAXSALT * 4 + 2) / 3)
+#define	BCRYPT_HASHSPACE	60
 
 static int bcrypt_initsalt(int, uint8_t *, char *, uint8_t);
 static int encode_base64(char *, const uint8_t *, size_t);
@@ -82,17 +82,22 @@ static int secure_compare(const uint8_t *, const uint8_t *, size_t);
 
 static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-	char csalt[BCRYPT_MAXSALT];
+	ErlNifBinary csalt;
 	unsigned int log_rounds, minor;
-	char gsalt[BCRYPT_SALTSPACE];
 
-	if (argc != 3 || !enif_get_string(env, argv[0], csalt, sizeof(csalt), ERL_NIF_LATIN1) ||
+	if (argc != 3 ||
+			!enif_inspect_binary(env, argv[0], &csalt) ||
+			csalt.size != BCRYPT_MAXSALT ||
 			!enif_get_uint(env, argv[1], &log_rounds) ||
 			!enif_get_uint(env, argv[2], &minor))
 		return enif_make_badarg(env);
 
-	bcrypt_initsalt(log_rounds, (uint8_t *)csalt, gsalt, (uint8_t)minor);
-	return enif_make_string(env, gsalt, ERL_NIF_LATIN1);
+	ERL_NIF_TERM output;
+	unsigned char *output_data = enif_make_new_binary(env, BCRYPT_SALTSPACE, &output);
+
+	bcrypt_initsalt(log_rounds, (uint8_t *)csalt.data, (char *)output_data, (uint8_t)minor);
+
+	return output;
 }
 
 /*
@@ -225,25 +230,27 @@ inval:
 static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
 	char pass[BCRYPT_MAXPASS];
-	char salt[BCRYPT_SALTSPACE];
-	char gencrypted[BCRYPT_HASHSPACE];
+	char salt[BCRYPT_SALTSPACE + 1];
+	ERL_NIF_TERM output;
+	unsigned char *output_data = enif_make_new_binary(env, BCRYPT_HASHSPACE, &output);
 
 	if (argc != 2 || !enif_get_string(env, argv[0], pass, sizeof(pass), ERL_NIF_LATIN1) ||
 			!enif_get_string(env, argv[1], salt, sizeof(salt), ERL_NIF_LATIN1))
 		return enif_make_badarg(env);
 
 	if (bcrypt_hashpass((const char *)pass, (const char *)salt,
-				gencrypted, sizeof(gencrypted)) != 0)
+				(char *)output_data, BCRYPT_HASHSPACE) != 0)
 		return enif_make_badarg(env);
 
-	return enif_make_string(env, gencrypted, ERL_NIF_LATIN1);
+	return output;
 }
 
 static ERL_NIF_TERM bcrypt_checkpass_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
 	char pass[BCRYPT_MAXPASS];
-	char goodhash[BCRYPT_HASHSPACE];
-	char hash[BCRYPT_HASHSPACE];
+	char goodhash[BCRYPT_HASHSPACE + 1];
+	char hash[BCRYPT_HASHSPACE + 1];
+	hash[BCRYPT_HASHSPACE] = '\0';
 
 	if (argc != 2 || !enif_get_string(env, argv[0], pass, sizeof(pass), ERL_NIF_LATIN1) ||
 			!enif_get_string(env, argv[1], goodhash, sizeof(goodhash), ERL_NIF_LATIN1))
@@ -356,7 +363,6 @@ static int encode_base64(char *b64buffer, const uint8_t *data, size_t len)
 		*bp++ = Base64Code[c1];
 		*bp++ = Base64Code[c2 & 0x3f];
 	}
-	*bp = '\0';
 	return 0;
 }
 

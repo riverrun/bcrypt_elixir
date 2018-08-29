@@ -48,9 +48,7 @@ defmodule Bcrypt do
   """
   def gen_salt(log_rounds \\ 12, legacy \\ false) do
     :crypto.strong_rand_bytes(16)
-    |> :binary.bin_to_list()
     |> Base.gensalt_nif(log_rounds, (legacy and 97) || 98)
-    |> :binary.list_to_bin()
   end
 
   @doc """
