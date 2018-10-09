@@ -70,6 +70,16 @@ For a lower-level api, see the documentation for Bcrypt.Base.
 For further information about password hashing and using Bcrypt with Comeonin,
 see the Comeonin [wiki](https://github.com/riverrun/comeonin/wiki).
 
+## Docker
+
+In order to use `bcrypt_elixir` in Docker, you will probably need to manually compile it in your Dockerfile. In order to do it on the Alpine image, you're going to need `make`, `gcc` and `libc-dev`. Add the following lines to your Dockerfile, right after `RUN mix deps.get`
+
+```
+RUN apk add --no-cache make gcc libc-dev
+
+RUN cd deps/bcrypt_elixir && make clean && make
+```
+
 ## Deployment
 
 See the Comeonin [deployment guide](https://github.com/riverrun/comeonin/wiki/Deployment).
