@@ -76,9 +76,9 @@ In order to use `bcrypt_elixir` in Docker, you will probably need to manually co
 
 ```
 RUN apk add --no-cache make gcc libc-dev
-
-RUN cd deps/bcrypt_elixir && make clean && make
 ```
+
+Remember to add your local `_build` and `deps` folders to `.dockerignore`, because otherwise, you'll see errors coming up.
 
 ## Deployment
 
