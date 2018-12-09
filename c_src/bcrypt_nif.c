@@ -80,13 +80,12 @@ static int decode_base64(uint8_t *, size_t, const char *);
 static void secure_bzero(void *, size_t);
 static int secure_compare(const uint8_t *, const uint8_t *, size_t);
 
-static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM bcrypt_gensalt_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
 	ErlNifBinary csalt;
 	unsigned int log_rounds, minor;
 
-	if (argc != 3 ||
-			!enif_inspect_binary(env, argv[0], &csalt) ||
+	if (argc != 3 || !enif_inspect_binary(env, argv[0], &csalt) ||
 			csalt.size != BCRYPT_MAXSALT ||
 			!enif_get_uint(env, argv[1], &log_rounds) ||
 			!enif_get_uint(env, argv[2], &minor))
@@ -227,7 +226,7 @@ inval:
 	return -1;
 }
 
-static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
 	char pass[BCRYPT_MAXPASS];
 	char salt[BCRYPT_SALTSPACE + 1];
@@ -245,7 +244,7 @@ static ERL_NIF_TERM bcrypt_hash_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM
 	return output;
 }
 
-static ERL_NIF_TERM bcrypt_checkpass_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+static ERL_NIF_TERM bcrypt_checkpass_nif(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
 	char pass[BCRYPT_MAXPASS];
 	char goodhash[BCRYPT_HASHSPACE + 1];

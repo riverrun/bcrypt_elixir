@@ -24,17 +24,17 @@ for more details.
 
 1. Add bcrypt_elixir to the `deps` section of your mix.exs file:
 
-If you are using Erlang 20:
+If you are using Erlang >20:
 
 ```elixir
 def deps do
   [
-    {:bcrypt_elixir, "~> 1.0"}
+    {:bcrypt_elixir, "~> 1.1"}
   ]
 end
 ```
 
-If you are NOT using Erlang 20:
+If you are NOT using Erlang 19 or below:
 
 ```elixir
 def deps do
@@ -70,7 +70,7 @@ For a lower-level api, see the documentation for Bcrypt.Base.
 For further information about password hashing and using Bcrypt with Comeonin,
 see the Comeonin [wiki](https://github.com/riverrun/comeonin/wiki).
 
-## Docker
+### Docker
 
 In order to use `bcrypt_elixir` in Docker, you will probably need to manually compile it in your Dockerfile. In order to do it on the Alpine image, you're going to need `make`, `gcc` and `libc-dev`. Add the following lines to your Dockerfile, right after `RUN mix deps.get`
 
@@ -80,9 +80,26 @@ RUN apk add --no-cache make gcc libc-dev
 
 Remember to add your local `_build` and `deps` folders to `.dockerignore`, because otherwise, you'll see errors coming up.
 
-## Deployment
+### Deployment
 
 See the Comeonin [deployment guide](https://github.com/riverrun/comeonin/wiki/Deployment).
+
+## Contributing
+
+There are many ways you can contribute to the development of this library, including:
+
+* reporting issues
+* improving documentation
+* sharing your experiences with others
+* [making a financial contribution](#donations)
+
+## Donations
+
+You can support the ongoing maintenance of this project by
+[making donations through Patreon](https://www.patreon.com/riverrun).
+
+Patreon, by default, will bill you on a monthly basis. If you prefer to make a one-off payment,
+see [this guide](https://support.patreon.com/hc/en-us/articles/204606215-Can-I-make-a-one-time-payment-).
 
 ### License
 
