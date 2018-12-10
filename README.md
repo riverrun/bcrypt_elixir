@@ -1,5 +1,8 @@
 # Bcrypt
 
+[![Patreon](https://img.shields.io/badge/patreon-donate-brightgreen.svg)](https://www.patreon.com/riverrun)
+[![Hex.pm Version](http://img.shields.io/hexpm/v/bcrypt_elixir.svg)](https://hex.pm/packages/bcrypt_elixir)
+
 Bcrypt password hashing algorithm for Elixir.
 
 Bcrypt is a well-tested password-based key derivation function that
