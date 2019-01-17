@@ -1,6 +1,6 @@
 # Bcrypt
 
-[![Patreon](https://img.shields.io/badge/patreon-donate-brightgreen.svg)](https://www.patreon.com/riverrun)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/alovedalongthe)
 [![Hex.pm Version](http://img.shields.io/hexpm/v/bcrypt_elixir.svg)](https://hex.pm/packages/bcrypt_elixir)
 
 Bcrypt password hashing algorithm for Elixir.
@@ -16,12 +16,6 @@ the `$2y$` prefix, see [this issue](https://github.com/riverrun/comeonin/issues/
 This library can be used on its own, or it can be used together
 with [Comeonin](https://hexdocs.pm/comeonin/api-reference.html),
 which provides a higher-level api.
-
-## Async tests issue
-
-Some developers have reported problems when running tests using `async: true`
-with version 1.0 of bcrypt_elixir. See this [issue](https://github.com/riverrun/bcrypt_elixir/issues/10)
-for more details.
 
 ## Installation
 
@@ -98,11 +92,8 @@ There are many ways you can contribute to the development of this library, inclu
 
 ## Donations
 
-You can support the ongoing maintenance of this project by
-[making donations through Patreon](https://www.patreon.com/riverrun).
-
-Patreon, by default, will bill you on a monthly basis. If you prefer to make a one-off payment,
-see [this guide](https://support.patreon.com/hc/en-us/articles/204606215-Can-I-make-a-one-time-payment-).
+If you would like to buy me a cup of coffee, you can
+do so through [paypal](https://www.paypal.me/alovedalongthe)
 
 ### License
 
