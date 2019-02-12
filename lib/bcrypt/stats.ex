@@ -2,7 +2,10 @@ defmodule Bcrypt.Stats do
   @moduledoc """
   Module to provide statistics for the Bcrypt password hashing function.
 
-  ## Configuring Bcrypt
+  The `report` function in this module can be used to help you configure
+  Bcrypt.
+
+  ## Configuration
 
   There is one configuration option for Bcrypt - log_rounds.
   Increasing this value will increase the complexity, and time

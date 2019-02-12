@@ -1,45 +1,42 @@
 defmodule BcryptTest do
   use ExUnit.Case
 
-  def hash_check_password(password, wrong1, wrong2, wrong3) do
-    hash = Bcrypt.hash_pwd_salt(password)
-    assert Bcrypt.verify_pass(password, hash) == true
-    assert Bcrypt.verify_pass(wrong1, hash) == false
-    assert Bcrypt.verify_pass(wrong2, hash) == false
-    assert Bcrypt.verify_pass(wrong3, hash) == false
-  end
+  import BcryptTestHelper
 
   test "hashing and checking passwords" do
-    hash_check_password("password", "passwor", "passwords", "pasword")
-    hash_check_password("hard2guess", "ha rd2guess", "had2guess", "hardtoguess")
+    wrong_list = ["aged2h$ru", "2dau$ehgr", "rg$deh2au", "2edrah$gu", "$agedhur2", ""]
+    password_hash_check("hard2guess", wrong_list)
   end
 
   test "hashing and checking passwords with characters from the extended ascii set" do
-    hash_check_password("aáåäeéêëoôö", "aáåäeéêëoö", "aáåeéêëoôö", "aáå äeéêëoôö")
-    hash_check_password("aáåä eéêëoôö", "aáåä eéê ëoö", "a áåeé êëoôö", "aáå äeéêëoôö")
+    wrong_list = ["eáé åöêô ëaäo", "aäôáö eéoêë å", " aöêôée oåäëá", "åaêöéäëeoô á ", ""]
+    password_hash_check("aáåä eéê ëoôö", wrong_list)
   end
 
   test "hashing and checking passwords with non-ascii characters" do
-    hash_check_password(
-      "Сколько лет, сколько зим",
-      "Сколько лет,сколько зим",
-      "Сколько лет сколько зим",
-      "Сколько лет, сколько"
-    )
+    wrong_list = [
+      "и Скл;лекьоток к олсомзь",
+      "кеокок  зС омлслтььлок;и",
+      "е  о оиькльлтСо;осккклзм",
+      ""
+    ]
 
-    hash_check_password("สวัสดีครับ", "สวัดีครับ", "สวัสสดีครับ", "วัสดีครับ")
+    password_hash_check("Сколько лет; сколько зим", wrong_list)
   end
 
   test "hashing and checking passwords with mixed characters" do
-    hash_check_password("Я❤três☕ où☔", "Я❤tres☕ où☔", "Я❤três☕où☔", "Я❤três où☔")
+    wrong_list = ["Я☕t☔s❤ùo", "o❤ Я☔ùrtês☕", " ùt❤o☕☔srêЯ", "ù☕os êt❤☔rЯ", ""]
+    password_hash_check("Я❤três☕ où☔", wrong_list)
   end
 
-  test "hash_pwd_salt number of rounds" do
-    assert String.starts_with?(Bcrypt.hash_pwd_salt("", log_rounds: 4), "$2b$04$")
-    Application.put_env(:bcrypt_elixir, :log_rounds, 4)
-    assert String.starts_with?(Bcrypt.hash_pwd_salt(""), "$2b$04$")
-    Application.delete_env(:bcrypt_elixir, :log_rounds)
-    assert String.starts_with?(Bcrypt.hash_pwd_salt(""), "$2b$12$")
+  test "check password using check_pass, which uses the user map as input" do
+    wrong_list = ["บดสคสััีวร", "สดรบัีสัคว", "สวดัรคบัสี", "ดรสสีวคบัั", "วรคดสัสีับ", ""]
+    check_pass_check("สวัสดีครับ", wrong_list)
+  end
+
+  test "add hash to map and set password to nil" do
+    wrong_list = ["êäöéaoeôáåë", "åáoêëäéôeaö", "aäáeåëéöêôo", ""]
+    add_hash_check("aáåäeéêëoôö", wrong_list)
   end
 
   test "hash_pwd_salt legacy prefix" do
@@ -67,5 +64,42 @@ defmodule BcryptTest do
   test "gen_salt with support for $2a$ prefix" do
     assert String.starts_with?(Bcrypt.gen_salt(8, true), "$2a$08$")
     assert String.starts_with?(Bcrypt.gen_salt(12, true), "$2a$12$")
+  end
+
+  test "add_hash and check_pass" do
+    assert {:ok, user} = Bcrypt.add_hash("password") |> Bcrypt.check_pass("password")
+    assert {:error, "invalid password"} =
+             Bcrypt.add_hash("pass") |> Bcrypt.check_pass("password")
+    assert Map.has_key?(user, :password_hash)
+  end
+
+  test "add_hash with a custom hash_key and check_pass" do
+    assert {:ok, user} =
+             Bcrypt.add_hash("password", hash_key: :encrypted_password)
+             |> Bcrypt.check_pass("password")
+    assert {:error, "invalid password"} =
+             Bcrypt.add_hash("pass", hash_key: :encrypted_password)
+             |> Bcrypt.check_pass("password")
+    assert Map.has_key?(user, :encrypted_password)
+  end
+
+  test "check_pass with custom hash_key" do
+    assert {:ok, user} =
+             Bcrypt.add_hash("password", hash_key: :custom_hash)
+             |> Bcrypt.check_pass("password", hash_key: :custom_hash)
+    assert Map.has_key?(user, :custom_hash)
+  end
+
+  test "check_pass with invalid hash_key" do
+    {:error, message} =
+      Bcrypt.add_hash("password", hash_key: :unconventional_name)
+      |> Bcrypt.check_pass("password")
+
+    assert message =~ "no password hash found"
+  end
+
+  test "check_pass with password that is not a string" do
+    assert {:error, message} = Bcrypt.add_hash("pass") |> Bcrypt.check_pass(nil)
+    assert message =~ "password is not a string"
   end
 end

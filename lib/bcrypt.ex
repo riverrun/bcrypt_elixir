@@ -2,11 +2,49 @@ defmodule Bcrypt do
   @moduledoc """
   Bcrypt password hashing library main module.
 
-  This library can be used on its own, or it can be used together with
-  [Comeonin](https://hexdocs.pm/comeonin/api-reference.html), which
-  provides a higher-level api.
+  This module implements the Comeonin and Comeonin.PasswordHash behaviours,
+  providing the following functions:
+
+    * `add_hash/2` - takes a password as input and returns a map containing the password hash
+    * `check_pass/3` - takes a user struct and password as input and verifies the password
+    * `no_user_verify/1` - runs the hash function, but always returns false
+    * `hash_pwd_salt/2` - hashes the password with a randomly-generated salt
+    * `verify_pass/2` - verifies a password
 
   For a lower-level API, see Bcrypt.Base.
+
+  ## Configuration
+
+  The following parameter can be set in the config file:
+
+    * `log_rounds` - the computational cost as number of log rounds
+      * the default is 12 (2^12 rounds)
+
+  If you are hashing passwords in your tests, it can be useful to add
+  the following to the `config/test.exs` file:
+
+      config :bcrypt_elixir, log_rounds: 4
+
+  NB. do not use this value in production.
+
+  ## Options
+
+  In addition to the options listed below, the `add_hash`, `no_user_verify`
+  and `hash_pwd_salt` functions all take a `log_rounds` option, which can be
+  used to override the value in the config.
+
+  ### add_hash
+
+    * `hash_key` - the key used in the map for the password hash
+      * the default is `password_hash`
+
+  ### check_pass
+
+    * `hash_key` - the key used in the user struct for the password hash
+      * if this is not set, `check_pass` will look for `password_hash`, and then `encrypted_password`
+    * `hide_user` - run `no_user_verify` to prevent user enumeration
+      * the default is true
+      * set this to false if you do not want to hide usernames
 
   ## Bcrypt
 
@@ -31,7 +69,10 @@ defmodule Bcrypt do
 
   The `$2y$` prefix is not supported. For advice on how to use hashes with the
   `$2y$` prefix, see [this issue](https://github.com/riverrun/comeonin/issues/103).
+  Hash the password with a salt which is randomly generated.
   """
+
+  use Comeonin
 
   alias Bcrypt.Base
 
@@ -47,39 +88,10 @@ defmodule Bcrypt do
   by older libraries.
   """
   def gen_salt(log_rounds \\ 12, legacy \\ false) do
-    :crypto.strong_rand_bytes(16)
-    |> Base.gensalt_nif(log_rounds, (legacy and 97) || 98)
+    Base.gensalt_nif(:crypto.strong_rand_bytes(16), log_rounds, (legacy and 97) || 98)
   end
 
-  @doc """
-  Hash the password with a salt which is randomly generated.
-
-  ## Configurable parameters
-
-  The following parameters can be set in the config file:
-
-    * `log_rounds` - the computational cost as number of log rounds, by default
-      it is 12 (2^12).
-
-  If you are hashing passwords in your tests, it can be useful to add
-  the following to the `config/test.exs` file:
-
-      config :bcrypt_elixir,
-        log_rounds: 4
-
-  NB. do not use this value in production.
-
-  ## Options
-
-  There is one option (this can be used if you want to override the
-  value in the config):
-
-    * `:log_rounds` - override the application's configured computational cost.
-    * `:legacy` - whether to generate a salt with the old `$2a$` prefix. This
-      should only be used to generate hashes that will be checked by older
-      libraries.
-
-  """
+  @impl true
   def hash_pwd_salt(password, opts \\ []) do
     Base.hash_password(
       password,
@@ -90,26 +102,10 @@ defmodule Bcrypt do
     )
   end
 
-  @doc """
-  Check the password.
-
-  The check is performed in constant time to avoid timing attacks.
-  """
+  @impl true
   def verify_pass(password, stored_hash) do
     Base.checkpass_nif(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))
     |> handle_verify
-  end
-
-  @doc """
-  A dummy verify function to help prevent user enumeration.
-
-  This always returns false. The reason for implementing this check is
-  in order to make it more difficult for an attacker to identify users
-  by timing responses.
-  """
-  def no_user_verify(opts \\ []) do
-    hash_pwd_salt("password", opts)
-    false
   end
 
   defp handle_verify(0), do: true
