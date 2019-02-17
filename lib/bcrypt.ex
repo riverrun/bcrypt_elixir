@@ -46,6 +46,47 @@ defmodule Bcrypt do
       * the default is true
       * set this to false if you do not want to hide usernames
 
+  ## Examples
+
+  The following examples show how to hash a password with a randomly-generated
+  salt and then verify a password:
+
+      iex> hash = Bcrypt.hash_pwd_salt("password")
+      ...> Bcrypt.verify_pass("password", hash)
+      true
+
+      iex> hash = Bcrypt.hash_pwd_salt("password")
+      ...> Bcrypt.verify_pass("incorrect", hash)
+      false
+
+  ### add_hash
+
+  The `put_pass_hash` function below is an example of how you can use
+  `add_hash` to add the password hash to the Ecto changeset.
+
+      defp put_pass_hash(%Ecto.Changeset{valid?: true, changes:
+          %{password: password}} = changeset) do
+        change(changeset, Bcrypt.add_hash(password))
+      end
+
+      defp put_pass_hash(changeset), do: changeset
+
+  This function will return a changeset with `%{password_hash: password_hash, password: nil}`
+  added to the `changes` map.
+
+  ### check_pass
+
+  The following is an example of calling this function with no options:
+
+    def verify_user(%{"password" => password} = params) do
+      params
+      |> Accounts.get_by()
+      |> Bcrypt.check_pass(password)
+    end
+
+  The `Accounts.get_by` function in this example takes the user parameters
+  (for example, email and password) as input and returns a user struct or nil.
+ 
   ## Bcrypt
 
   Bcrypt is a key derivation function for passwords designed by Niels Provos

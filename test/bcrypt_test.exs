@@ -1,5 +1,6 @@
 defmodule BcryptTest do
   use ExUnit.Case
+  doctest Bcrypt
 
   import BcryptTestHelper
 
