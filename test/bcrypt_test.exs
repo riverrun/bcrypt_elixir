@@ -2,42 +2,30 @@ defmodule BcryptTest do
   use ExUnit.Case
   doctest Bcrypt
 
-  import BcryptTestHelper
+  import Comeonin.BehaviourTestHelper
 
-  test "hashing and checking passwords" do
-    wrong_list = ["aged2h$ru", "2dau$ehgr", "rg$deh2au", "2edrah$gu", "$agedhur2", ""]
-    password_hash_check("hard2guess", wrong_list)
+  test "implementation of Comeonin.PasswordHash behaviour" do
+    password = Enum.random(ascii_passwords())
+    assert correct_password_true(Bcrypt, password)
+    assert wrong_password_false(Bcrypt, password)
   end
 
-  test "hashing and checking passwords with characters from the extended ascii set" do
-    wrong_list = ["eáé åöêô ëaäo", "aäôáö eéoêë å", " aöêôée oåäëá", "åaêöéäëeoô á ", ""]
-    password_hash_check("aáåä eéê ëoôö", wrong_list)
+  test "Comeonin.PasswordHash behaviour with non-ascii characters" do
+    password = Enum.random(non_ascii_passwords())
+    assert correct_password_true(Bcrypt, password)
+    assert wrong_password_false(Bcrypt, password)
   end
 
-  test "hashing and checking passwords with non-ascii characters" do
-    wrong_list = [
-      "и Скл;лекьоток к олсомзь",
-      "кеокок  зС омлслтььлок;и",
-      "е  о оиькльлтСо;осккклзм",
-      ""
-    ]
-
-    password_hash_check("Сколько лет; сколько зим", wrong_list)
+  test "add_hash function" do
+    password = Enum.random(ascii_passwords())
+    assert add_hash_creates_map(Bcrypt, password)
   end
 
-  test "hashing and checking passwords with mixed characters" do
-    wrong_list = ["Я☕t☔s❤ùo", "o❤ Я☔ùrtês☕", " ùt❤o☕☔srêЯ", "ù☕os êt❤☔rЯ", ""]
-    password_hash_check("Я❤três☕ où☔", wrong_list)
-  end
-
-  test "check password using check_pass, which uses the user map as input" do
-    wrong_list = ["บดสคสััีวร", "สดรบัีสัคว", "สวดัรคบัสี", "ดรสสีวคบัั", "วรคดสัสีับ", ""]
-    check_pass_check("สวัสดีครับ", wrong_list)
-  end
-
-  test "add hash to map and set password to nil" do
-    wrong_list = ["êäöéaoeôáåë", "åáoêëäéôeaö", "aäáeåëéöêôo", ""]
-    add_hash_check("aáåäeéêëoôö", wrong_list)
+  test "check_pass function" do
+    password = Enum.random(ascii_passwords())
+    assert check_pass_returns_user(Bcrypt, password)
+    assert check_pass_returns_error(Bcrypt, password)
+    assert check_pass_nil_user(Bcrypt)
   end
 
   test "hash_pwd_salt legacy prefix" do
