@@ -1,6 +1,7 @@
 # Bcrypt
 
 [![Hex.pm Version](http://img.shields.io/hexpm/v/bcrypt_elixir.svg)](https://hex.pm/packages/bcrypt_elixir)
+[![Build Status](https://travis-ci.com/riverrun/bcrypt_elixir.svg?branch=master)](https://travis-ci.com/riverrun/bcrypt_elixir)
 
 Bcrypt password hashing library for Elixir.
 
