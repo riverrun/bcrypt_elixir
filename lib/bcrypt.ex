@@ -86,7 +86,7 @@ defmodule Bcrypt do
 
   The `Accounts.get_by` function in this example takes the user parameters
   (for example, email and password) as input and returns a user struct or nil.
- 
+
   ## Bcrypt
 
   Bcrypt is a key derivation function for passwords designed by Niels Provos

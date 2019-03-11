@@ -57,8 +57,7 @@ defmodule BcryptTest do
 
   test "add_hash and check_pass" do
     assert {:ok, user} = Bcrypt.add_hash("password") |> Bcrypt.check_pass("password")
-    assert {:error, "invalid password"} =
-             Bcrypt.add_hash("pass") |> Bcrypt.check_pass("password")
+    assert {:error, "invalid password"} = Bcrypt.add_hash("pass") |> Bcrypt.check_pass("password")
     assert Map.has_key?(user, :password_hash)
   end
 
@@ -66,9 +65,11 @@ defmodule BcryptTest do
     assert {:ok, user} =
              Bcrypt.add_hash("password", hash_key: :encrypted_password)
              |> Bcrypt.check_pass("password")
+
     assert {:error, "invalid password"} =
              Bcrypt.add_hash("pass", hash_key: :encrypted_password)
              |> Bcrypt.check_pass("password")
+
     assert Map.has_key?(user, :encrypted_password)
   end
 
@@ -76,6 +77,7 @@ defmodule BcryptTest do
     assert {:ok, user} =
              Bcrypt.add_hash("password", hash_key: :custom_hash)
              |> Bcrypt.check_pass("password", hash_key: :custom_hash)
+
     assert Map.has_key?(user, :custom_hash)
   end
 
