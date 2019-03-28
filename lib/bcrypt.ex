@@ -78,11 +78,11 @@ defmodule Bcrypt do
 
   The following is an example of calling this function with no options:
 
-    def verify_user(%{"password" => password} = params) do
-      params
-      |> Accounts.get_by()
-      |> Bcrypt.check_pass(password)
-    end
+      def verify_user(%{"password" => password} = params) do
+        params
+        |> Accounts.get_by()
+        |> Bcrypt.check_pass(password)
+      end
 
   The `Accounts.get_by` function in this example takes the user parameters
   (for example, email and password) as input and returns a user struct or nil.
