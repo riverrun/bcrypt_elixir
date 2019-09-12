@@ -9,6 +9,12 @@ Bcrypt is a well-tested password-based key derivation function that
 can be configured to remain slow and resistant to brute-force attacks
 even as computational power increases.
 
+## Compatibility with other Bcrypt libraries
+
+This version is based on the OpenBSD version of Bcrypt and supports
+the `$2b$` and `$2a$` prefixes. For advice on how to use hashes with
+the `$2y$` prefix, see [this issue](https://github.com/riverrun/comeonin/issues/103).
+
 ## Changes in version 2
 
 In version 2.0, bcrypt_elixir has been updated to implement the Comeonin
