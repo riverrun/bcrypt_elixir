@@ -1,7 +1,7 @@
 defmodule BcryptElixir.Mixfile do
   use Mix.Project
 
-  @version "2.0.3"
+  @version "2.1.0"
 
   @description """
   Bcrypt password hashing algorithm for Elixir
@@ -32,7 +32,7 @@ defmodule BcryptElixir.Mixfile do
 
   defp deps do
     [
-      {:comeonin, "~> 5.1"},
+      {:comeonin, "~> 5.2"},
       {:elixir_make, "~> 0.5", runtime: false},
       {:ex_doc, "~> 0.20", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.3", only: :dev, runtime: false}

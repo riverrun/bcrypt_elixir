@@ -2,14 +2,8 @@ defmodule Bcrypt do
   @moduledoc """
   Elixir wrapper for the Bcrypt password hashing function.
 
-  This module implements the Comeonin and Comeonin.PasswordHash behaviours,
-  providing the following functions:
-
-    * `add_hash/2` - takes a password as input and returns a map containing the password hash
-    * `check_pass/3` - takes a user struct and password as input and verifies the password
-    * `no_user_verify/1` - runs the hash function, but always returns false
-    * `hash_pwd_salt/2` - hashes the password with a randomly-generated salt
-    * `verify_pass/2` - verifies a password
+  Most applications will just need to use the `add_hash/2` and `check_pass/3`
+  convenience functions in this module.
 
   For a lower-level API, see Bcrypt.Base.
 
@@ -26,66 +20,6 @@ defmodule Bcrypt do
       config :bcrypt_elixir, log_rounds: 4
 
   NB. do not use this value in production.
-
-  ## Options
-
-  In addition to the options listed below, the `add_hash`, `no_user_verify`
-  and `hash_pwd_salt` functions all take a `log_rounds` option, which can be
-  used to override the value in the config.
-
-  ### add_hash
-
-    * `:hash_key` - the key used in the map for the password hash
-      * the default is `password_hash`
-
-  ### check_pass
-
-    * `:hash_key` - the key used in the user struct for the password hash
-      * if this is not set, `check_pass` will look for `password_hash`, and then `encrypted_password`
-    * `:hide_user` - run `no_user_verify` to prevent user enumeration
-      * the default is true
-      * set this to false if you do not want to hide usernames
-
-  ## Examples
-
-  The following examples show how to hash a password with a randomly-generated
-  salt and then verify a password:
-
-      iex> hash = Bcrypt.hash_pwd_salt("password")
-      ...> Bcrypt.verify_pass("password", hash)
-      true
-
-      iex> hash = Bcrypt.hash_pwd_salt("password")
-      ...> Bcrypt.verify_pass("incorrect", hash)
-      false
-
-  ### add_hash
-
-  The `put_pass_hash` function below is an example of how you can use
-  `add_hash` to add the password hash to the Ecto changeset.
-
-      defp put_pass_hash(%Ecto.Changeset{valid?: true, changes:
-          %{password: password}} = changeset) do
-        change(changeset, Bcrypt.add_hash(password))
-      end
-
-      defp put_pass_hash(changeset), do: changeset
-
-  This function will return a changeset with `%{password_hash: password_hash, password: nil}`
-  added to the `changes` map.
-
-  ### check_pass
-
-  The following is an example of calling this function with no options:
-
-      def verify_user(%{"password" => password} = params) do
-        params
-        |> Accounts.get_by()
-        |> Bcrypt.check_pass(password)
-      end
-
-  The `Accounts.get_by` function in this example takes the user parameters
-  (for example, email and password) as input and returns a user struct or nil.
 
   ## Bcrypt
 
@@ -132,6 +66,29 @@ defmodule Bcrypt do
     Base.gensalt_nif(:crypto.strong_rand_bytes(16), log_rounds, (legacy and 97) || 98)
   end
 
+  @doc """
+  Hashes a password with a randomly generated salt.
+
+  ## Option
+
+    * `log_rounds` - the computational cost as number of log rounds
+      * the default is 12 (2^12 rounds)
+      * this can be used to override the value set in the config
+
+  ## Examples
+
+  The following examples show how to hash a password with a randomly-generated
+  salt and then verify a password:
+
+      iex> hash = Bcrypt.hash_pwd_salt("password")
+      ...> Bcrypt.verify_pass("password", hash)
+      true
+
+      iex> hash = Bcrypt.hash_pwd_salt("password")
+      ...> Bcrypt.verify_pass("incorrect", hash)
+      false
+
+  """
   @impl true
   def hash_pwd_salt(password, opts \\ []) do
     Base.hash_password(
@@ -143,6 +100,12 @@ defmodule Bcrypt do
     )
   end
 
+  @doc """
+  Verifies a password by hashing the password and comparing the hashed value
+  with a stored hash.
+
+  See the documentation for `hash_pwd_salt/2` for examples of using this function.
+  """
   @impl true
   def verify_pass(password, stored_hash) do
     Base.checkpass_nif(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))

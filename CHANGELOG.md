@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.0
+
+* Enhancements
+  * Updated documentation - in line with updates to Comeonin v5.2
+
 ## v2.0.0
 
 * Enhancements
