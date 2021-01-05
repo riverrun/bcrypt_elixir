@@ -1,4 +1,5 @@
-CFLAGS = -g -O3 -Wall -Wno-format-truncation
+CFLAGS ?= -g -O3
+CFLAGS += -Wall -Wno-format-truncation
 
 CFLAGS += -I"$(ERTS_INCLUDE_DIR)"
 CFLAGS += -Ic_src
