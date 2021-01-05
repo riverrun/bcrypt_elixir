@@ -23,6 +23,9 @@ NIF_SRC=\
 	c_src/bcrypt_nif.c\
 	c_src/blowfish.c
 
+calling_from_make:
+	mix compile
+
 all: $(PRIV_DIR) $(LIB_NAME)
 
 $(LIB_NAME): $(NIF_SRC)
