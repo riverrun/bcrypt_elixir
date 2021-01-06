@@ -1,10 +1,11 @@
-CFLAGS = -g -O3 -Wall -Wno-format-truncation
+CFLAGS ?= -g -O3
+CFLAGS += -Wall -Wno-format-truncation
 
-ERLANG_PATH = $(shell erl -eval 'io:format("~s", [lists:concat([code:root_dir(), "/erts-", erlang:system_info(version), "/include"])])' -s init stop -noshell)
-CFLAGS += -I"$(ERLANG_PATH)"
+CFLAGS += -I"$(ERTS_INCLUDE_DIR)"
 CFLAGS += -Ic_src
 
-LIB_NAME = priv/bcrypt_nif.so
+PRIV_DIR = $(MIX_APP_PATH)/priv
+LIB_NAME = $(PRIV_DIR)/bcrypt_nif.so
 ifneq ($(CROSSCOMPILE),)
     # crosscompiling
     CFLAGS += -fPIC
@@ -23,11 +24,16 @@ NIF_SRC=\
 	c_src/bcrypt_nif.c\
 	c_src/blowfish.c
 
-all: $(LIB_NAME)
+calling_from_make:
+	mix compile
+
+all: $(PRIV_DIR) $(LIB_NAME)
 
 $(LIB_NAME): $(NIF_SRC)
-	mkdir -p priv
 	$(CC) $(CFLAGS) -shared $(LDFLAGS) $^ -o $@
+
+$(PRIV_DIR):
+	mkdir -p $@
 
 clean:
 	rm -f $(LIB_NAME)
