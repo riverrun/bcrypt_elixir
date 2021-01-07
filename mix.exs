@@ -36,8 +36,8 @@ defmodule BcryptElixir.Mixfile do
     [
       {:comeonin, "~> 5.3"},
       {:elixir_make, "~> 0.6", runtime: false},
-      {:ex_doc, "~> 0.20", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.3", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.23", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0.0", only: :dev, runtime: false}
     ]
   end
 
