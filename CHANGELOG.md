@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.2.0
+## v2.3.0
 
 * Enhancements
   * updated Makefile to be more robust, especially for Nerves users
