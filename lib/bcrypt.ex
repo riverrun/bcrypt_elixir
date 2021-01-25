@@ -5,21 +5,20 @@ defmodule Bcrypt do
   Most applications will just need to use the `add_hash/2` and `check_pass/3`
   convenience functions in this module.
 
-  For a lower-level API, see Bcrypt.Base.
+  For a lower-level API, see `Bcrypt.Base`.
 
   ## Configuration
 
   The following parameter can be set in the config file:
 
-    * `log_rounds` - the computational cost as number of log rounds
-      * the default is 12 (2^12 rounds)
+    * `:log_rounds` - the computational cost as number of log rounds
+      * the default is `12` (2^12 rounds)
 
   If you are hashing passwords in your tests, it can be useful to add
   the following to the `config/test.exs` file:
 
+      # Note: Do not use this value in production
       config :bcrypt_elixir, log_rounds: 4
-
-  NB. do not use this value in production.
 
   ## Bcrypt
 
@@ -54,11 +53,11 @@ defmodule Bcrypt do
   @doc """
   Generate a salt for use with the `Bcrypt.Base.hash_password` function.
 
-  The log_rounds parameter determines the computational complexity
+  The `:log_rounds` parameter determines the computational complexity
   of the generation of the password hash. Its default is 12, the minimum is 4,
   and the maximum is 31.
 
-  The `legacy` option is for generating salts with the old `$2a$` prefix.
+  The `:legacy` option is for generating salts with the old `$2a$` prefix.
   Only use this option if you need to generate hashes that are then checked
   by older libraries.
   """
@@ -71,7 +70,7 @@ defmodule Bcrypt do
 
   ## Option
 
-    * `log_rounds` - the computational cost as number of log rounds
+    * `:log_rounds` - the computational cost as number of log rounds
       * the default is 12 (2^12 rounds)
       * this can be used to override the value set in the config
 
