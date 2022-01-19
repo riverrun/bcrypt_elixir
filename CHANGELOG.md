@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.1 (2022-01-19)
+
+* Changes
+  * Updated documentation
+
 ## v2.3.0 (2021-01-07)
 
 * Enhancements

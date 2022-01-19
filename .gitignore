@@ -23,4 +23,7 @@ erl_crash.dump
 bcrypt_elixir-*.tar
 
 # Temporary files for e.g. tests
-/tmp
+/tmp/
+
+# priv
+/priv/
