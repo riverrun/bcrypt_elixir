@@ -23,6 +23,8 @@ defmodule Bcrypt.Stats do
   less than 12.
   """
 
+  alias Bcrypt.Base
+
   @doc """
   Hash a password with Bcrypt and print out a report.
 
@@ -39,16 +41,15 @@ defmodule Bcrypt.Stats do
     * `:password` - the password used
       * the default is "password"
     * `:salt` - the salt used
-      * the default is the output of Bcrypt.gen_salt
+      * the default is the output of `Bcrypt.Base.gen_salt`
   """
   def report(opts \\ []) do
     password = Keyword.get(opts, :password, "password")
     log_rounds = Keyword.get(opts, :log_rounds, 12)
-    salt = Keyword.get(opts, :salt, Bcrypt.gen_salt(log_rounds))
-    {exec_time, encoded} = :timer.tc(Bcrypt.Base, :hash_password, [password, salt])
+    salt = Keyword.get(opts, :salt, Base.gen_salt(log_rounds))
+    {exec_time, encoded} = :timer.tc(Base, :hash_password, [password, salt])
 
-    Bcrypt.verify_pass(password, encoded)
-    |> format_result(encoded, exec_time)
+    password |> Bcrypt.verify_pass(encoded) |> format_result(encoded, exec_time)
   end
 
   defp format_result(check, encoded, exec_time) do

@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.0 (2022-01-20)
+
+* Changes
+  * moved `gen_salt` to the `Base` module
+
 ## v2.3.1 (2022-01-19)
 
 * Changes

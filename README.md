@@ -28,7 +28,7 @@ the `$2y$` prefix, see [this issue](https://github.com/riverrun/comeonin/issues/
     ```elixir
     def deps do
       [
-        {:bcrypt_elixir, "~> 2.0"}
+        {:bcrypt_elixir, "~> 3.0"}
       ]
     end
     ```

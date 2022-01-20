@@ -34,27 +34,6 @@ defmodule BcryptTest do
     assert String.starts_with?(Bcrypt.hash_pwd_salt("", legacy: false), "$2b$")
   end
 
-  test "gen_salt number of rounds" do
-    assert String.starts_with?(Bcrypt.gen_salt(), "$2b$12$")
-    assert String.starts_with?(Bcrypt.gen_salt(8), "$2b$08$")
-    assert String.starts_with?(Bcrypt.gen_salt(20), "$2b$20$")
-  end
-
-  test "gen_salt length of salt" do
-    assert byte_size(Bcrypt.gen_salt(8)) == 29
-    assert byte_size(Bcrypt.gen_salt(20)) == 29
-  end
-
-  test "wrong input to gen_salt" do
-    assert String.starts_with?(Bcrypt.gen_salt(3), "$2b$04$")
-    assert String.starts_with?(Bcrypt.gen_salt(32), "$2b$31$")
-  end
-
-  test "gen_salt with support for $2a$ prefix" do
-    assert String.starts_with?(Bcrypt.gen_salt(8, true), "$2a$08$")
-    assert String.starts_with?(Bcrypt.gen_salt(12, true), "$2a$12$")
-  end
-
   test "add_hash and check_pass" do
     assert {:ok, user} = Bcrypt.add_hash("password") |> Bcrypt.check_pass("password")
     assert {:error, "invalid password"} = Bcrypt.add_hash("pass") |> Bcrypt.check_pass("password")

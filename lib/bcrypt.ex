@@ -2,9 +2,6 @@ defmodule Bcrypt do
   @moduledoc """
   Elixir wrapper for the Bcrypt password hashing function.
 
-  Most applications will just need to use the `add_hash/2` and `check_pass/3`
-  convenience functions in this module.
-
   For a lower-level API, see `Bcrypt.Base`.
 
   ## Configuration
@@ -36,7 +33,7 @@ defmodule Bcrypt do
   It is also possible to generate hashes with the `$2a$` prefix by running
   the following command:
 
-      Bcrypt.Base.hash_password("hard to guess", Bcrypt.gen_salt(12, true))
+      Bcrypt.Base.hash_password("hard to guess", Bcrypt.Base.gen_salt(12, true))
 
   This option should only be used if you need to generate hashes that are
   then checked by older libraries.
@@ -49,21 +46,6 @@ defmodule Bcrypt do
   use Comeonin
 
   alias Bcrypt.Base
-
-  @doc """
-  Generate a salt for use with the `Bcrypt.Base.hash_password` function.
-
-  The `:log_rounds` parameter determines the computational complexity
-  of the generation of the password hash. Its default is 12, the minimum is 4,
-  and the maximum is 31.
-
-  The `:legacy` option is for generating salts with the old `$2a$` prefix.
-  Only use this option if you need to generate hashes that are then checked
-  by older libraries.
-  """
-  def gen_salt(log_rounds \\ 12, legacy \\ false) do
-    Base.gensalt_nif(:crypto.strong_rand_bytes(16), log_rounds, (legacy and 97) || 98)
-  end
 
   @doc """
   Hashes a password with a randomly generated salt.
@@ -92,7 +74,7 @@ defmodule Bcrypt do
   def hash_pwd_salt(password, opts \\ []) do
     Base.hash_password(
       password,
-      gen_salt(
+      Base.gen_salt(
         Keyword.get(opts, :log_rounds, Application.get_env(:bcrypt_elixir, :log_rounds, 12)),
         Keyword.get(opts, :legacy, false)
       )

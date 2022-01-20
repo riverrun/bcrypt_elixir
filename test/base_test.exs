@@ -9,6 +9,27 @@ defmodule Bcrypt.BaseTest do
     end
   end
 
+  test "gen_salt number of rounds" do
+    assert String.starts_with?(Base.gen_salt(), "$2b$12$")
+    assert String.starts_with?(Base.gen_salt(8), "$2b$08$")
+    assert String.starts_with?(Base.gen_salt(20), "$2b$20$")
+  end
+
+  test "gen_salt length of salt" do
+    assert byte_size(Base.gen_salt(8)) == 29
+    assert byte_size(Base.gen_salt(20)) == 29
+  end
+
+  test "wrong input to gen_salt" do
+    assert String.starts_with?(Base.gen_salt(3), "$2b$04$")
+    assert String.starts_with?(Base.gen_salt(32), "$2b$31$")
+  end
+
+  test "gen_salt with support for $2a$ prefix" do
+    assert String.starts_with?(Base.gen_salt(8, true), "$2a$08$")
+    assert String.starts_with?(Base.gen_salt(12, true), "$2a$12$")
+  end
+
   test "Openwall Bcrypt tests" do
     [
       {

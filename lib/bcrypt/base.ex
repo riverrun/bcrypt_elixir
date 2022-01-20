@@ -25,6 +25,21 @@ defmodule Bcrypt.Base do
   end
 
   @doc """
+  Generate a salt for use with the `hash_password` function.
+
+  The `:log_rounds` parameter determines the computational complexity
+  of the generation of the password hash. Its default is 12, the minimum is 4,
+  and the maximum is 31.
+
+  The `:legacy` option is for generating salts with the old `$2a$` prefix.
+  Only use this option if you need to generate hashes that are then checked
+  by older libraries.
+  """
+  def gen_salt(log_rounds \\ 12, legacy \\ false) do
+    gensalt_nif(:crypto.strong_rand_bytes(16), log_rounds, (legacy and 97) || 98)
+  end
+
+  @doc """
   Hash a password using Bcrypt.
   """
   def hash_password(password, salt) when byte_size(salt) == 29 do
