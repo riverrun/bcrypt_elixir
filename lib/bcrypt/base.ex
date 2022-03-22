@@ -3,7 +3,7 @@ defmodule Bcrypt.Base do
   Base module for the Bcrypt password hashing library.
   """
 
-  use Bitwise
+  import Bitwise
 
   @compile {:autoload, false}
   @on_load {:init, 0}
