@@ -27,15 +27,15 @@ NIF_SRC=\
 calling_from_make:
 	mix compile
 
-all: $(PRIV_DIR) $(LIB_NAME)
+all: _priv_dir _lib_name
 
-$(LIB_NAME): $(NIF_SRC)
-	$(CC) $(CFLAGS) -shared $(LDFLAGS) $^ -o $@
+_lib_name: $(NIF_SRC)
+	$(CC) $(CFLAGS) -shared $(LDFLAGS) $^ -o "$(LIB_NAME)"
 
-$(PRIV_DIR):
-	mkdir -p $@
+_priv_dir:
+	mkdir -p "$(PRIV_DIR)"
 
 clean:
 	rm -f $(LIB_NAME)
 
-.PHONY: all clean
+.PHONY: all clean _priv_dir _lib_name
