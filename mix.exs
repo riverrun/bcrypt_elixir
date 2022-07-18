@@ -53,7 +53,7 @@ defmodule BcryptElixir.Mixfile do
     [
       files: ["lib", "c_src", "mix.exs", "Makefile*", "README.md", "LICENSE"],
       maintainers: ["David Whitlock"],
-      licenses: ["BSD"],
+      licenses: ["BSD-3-Clause", "ISC", "BSD-4-Clause"],
       links: %{
         "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md",
         "GitHub" => @source_url
