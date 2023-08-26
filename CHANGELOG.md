@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.0 (2023-08-26)
+
+* Changes
+  * Updated dependencies and documentation (through updates to the Comeonin documentation)
+
 ## v3.0.0 (2022-01-20)
 
 * Changes
