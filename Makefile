@@ -30,7 +30,7 @@ calling_from_make:
 all: _priv_dir _lib_name
 
 _lib_name: $(NIF_SRC)
-	$(CC) $(CFLAGS) -shared $(LDFLAGS) $^ -o "$(LIB_NAME)"
+	$(CC) $(CPPFLAGS) $(CFLAGS) -shared $(LDFLAGS) $^ -o "$(LIB_NAME)"
 
 _priv_dir:
 	mkdir -p "$(PRIV_DIR)"
