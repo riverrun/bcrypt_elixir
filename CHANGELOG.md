@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.2.0 (2024-10-04)
+
+* Changes
+  * Updated dependencies and made changes to silence warnings in Elixir 1.17
+
 ## v3.1.0 (2023-08-26)
 
 * Changes

@@ -2,7 +2,7 @@ defmodule BcryptElixir.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/riverrun/bcrypt_elixir"
-  @version "3.1.0"
+  @version "3.2.0"
   @description "Bcrypt password hashing algorithm for Elixir"
 
   def project do

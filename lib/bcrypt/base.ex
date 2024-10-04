@@ -67,7 +67,7 @@ defmodule Bcrypt.Base do
   def checkpass_nif(_, _), do: :erlang.nif_error(:not_loaded)
 
   defp load_nif do
-    path = :filename.join(:code.priv_dir(:bcrypt_elixir), 'bcrypt_nif')
+    path = :filename.join(:code.priv_dir(:bcrypt_elixir), ~c"bcrypt_nif")
     :erlang.load_nif(path, 0)
   end
 
