@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.3.0 (2025-04-27)
+
+* Changes
+  * Updated blowfish C libs (minor updates)
+
 ## v3.2.0 (2024-10-04)
 
 * Changes
