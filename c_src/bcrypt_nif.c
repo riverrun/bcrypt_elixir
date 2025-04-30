@@ -1,7 +1,7 @@
 /* The underlying bcrypt (hashing) code is derived from OpenBSD and is
 *  subject to the following license: */
 
-/*	$OpenBSD: bcrypt.c,v 1.57 2016/08/26 08:25:02 guenther Exp $	*/
+/*	$OpenBSD: bcrypt.c,v 1.58 2020/07/06 13:33:05 pirofti Exp $	*/
 
 /*
  * Copyright (c) 2014 Ted Unangst <tedu@openbsd.org>
