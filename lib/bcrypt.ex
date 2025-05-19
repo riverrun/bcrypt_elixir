@@ -24,23 +24,39 @@ defmodule Bcrypt do
   be configured to remain slow and resistant to brute-force attacks even as
   computational power increases.
 
+  ### Warning {: .warning}
+
+  Note that bcrypt only hashes the first 72 bytes of the input string.
+  If you are using bcrypt to hash data that is secret, such as passwords,
+  this will not cause any issues. However, if the string you are hashing
+  contains data that is not secret, then the fact that only the first 72 bytes
+  are hashed might lead to security issues.
+
+  See https://github.com/riverrun/bcrypt_elixir/issues/51 for more information.
+
   ## Bcrypt versions
 
-  This bcrypt implementation is based on the latest OpenBSD version, which
-  fixed a small issue that affected some passwords longer than 72 characters.
-  By default, it produces hashes with the prefix `$2b$`, and it can check
-  hashes with either the `$2b$` prefix or the older `$2a$` prefix.
-  It is also possible to generate hashes with the `$2a$` prefix by running
-  the following command:
+  This bcrypt implementation is based on the latest OpenBSD version, which uses
+  the prefix `$2b$`.
+
+  The `$2b$` prefix was used to replace the previous `$2a$` prefix in 2014 when
+  a bug affecting passwords longer than 255 bytes was discovered.
+  See https://undeadly.org/cgi?action=article&sid=20140224132743 for details.
+
+  For password verification, hashes with either the `$2b$` prefix or the older
+  `$2a$` prefix are supported.
+
+  This is not recommended, but to create hashes that use the older `$2a$` prefix,
+  you can do so by running the following command:
 
       Bcrypt.Base.hash_password("hard to guess", Bcrypt.Base.gen_salt(12, true))
 
-  This option should only be used if you need to generate hashes that are
-  then checked by older libraries.
-
-  The `$2y$` prefix is not supported. For advice on how to use hashes with the
-  `$2y$` prefix, see [this issue](https://github.com/riverrun/comeonin/issues/103).
-  Hash the password with a salt which is randomly generated.
+  The `$2y$` prefix is not supported, as this prefix was introduced by crypt_blowfish,
+  a PHP implementation of bcrypt, and it is not supported by OpenBSD. However,
+  if you need to support the `$2y$` prefix, note that, according to https://www.openwall.com/crypt/,
+  "the $2b$ prefix ... behaves exactly the same as crypt_blowfish's $2y$",
+  and so you could use this library for password verification after replacing
+  the `$2y$` prefix of the hashes with `$2b$`.
   """
 
   use Comeonin
