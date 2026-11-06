@@ -105,7 +105,7 @@ defmodule Bcrypt do
   """
   @impl true
   def verify_pass(password, stored_hash) do
-    Base.checkpass_nif(:binary.bin_to_list(password), :binary.bin_to_list(stored_hash))
+    Base.checkpass_nif(Base.password_chars(password), :binary.bin_to_list(stored_hash))
     |> handle_verify
   end
 
