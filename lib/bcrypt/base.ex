@@ -72,7 +72,7 @@ defmodule Bcrypt.Base do
   end
 
   defp hash(password, salt, prefix) when prefix in ["2a", "2b"] do
-    hash_nif(:binary.bin_to_list(password), :binary.bin_to_list(salt))
+    hash_nif(password_chars(password), :binary.bin_to_list(salt))
   end
 
   defp hash(_, _, prefix) do
@@ -81,5 +81,13 @@ defmodule Bcrypt.Base do
     For more information, see the Bcrypt versions section in the Comeonin wiki,
     at https://github.com/riverrun/comeonin/wiki/Choosing-the-password-hashing-algorithm.
     """
+  end
+
+  @doc false
+  # The NIF copies at most 255 bytes of the password (BCRYPT_MAXPASS - 1), so
+  # only that prefix is converted. A charlist costs about 16 bytes of heap per
+  # byte, which made converting a large password expensive for no effect.
+  def password_chars(password) do
+    :binary.bin_to_list(password, 0, min(byte_size(password), 255))
   end
 end
